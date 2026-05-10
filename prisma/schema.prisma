@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile            Profile?
+  scenarioAttempts   ScenarioAttempt[]
+  missionSubmissions MissionSubmission[]
+  progress           Progress?
+  accounts           Account[]
+  sessions           Session[]
+  bugReports         BugReport[]
+  feedback           Feedback[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  role           Role
+  companyStage   String
+  industry       String
+  aiFamiliarity  AiFamiliarity
+  biggestChallenge String
+  goals          String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Decision Readiness Profile scores (1-5)
+  conceptualScore    Int @default(0)
+  vendorScore        Int @default(0)
+  workflowScore      Int @default(0)
+  executionScore     Int @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  summary     String
+  content     String   @db.Text
+  difficulty  Difficulty
+  roles       Role[]
+  tags        String[]
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Scenario {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  summary     String
+  context     String   @db.Text
+  roles       Role[]
+  difficulty  Difficulty
+  industry    String?
+  prompts     Json     // ScenarioPrompt[]
+  rubric      Json     // RubricCriteria[]
+  staticFeedback Json  // StaticFeedback
+  isUnlocked  Boolean  @default(false)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  attempts    ScenarioAttempt[]
+}
+
+model ScenarioAttempt {
+  id             String   @id @default(cuid())
+  userId         String
+  scenarioId     String
+  responses      Json     // { promptId: string, response: string }[]
+  feedback       Json?    // AI or static feedback
+  score          Int?
+  selfAssessment String?  // "missed" | "partial" | "covered"
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id])
+}
+
+model Mission {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  instructions String  @db.Text
+  roles       Role[]
+  difficulty  Difficulty
+  staticGuidance String @db.Text
+  staticFeedback Json?
+  checklist   String[]
+  isUnlocked  Boolean  @default(false)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  submissions MissionSubmission[]
+}
+
+model MissionSubmission {
+  id             String   @id @default(cuid())
+  userId         String
+  missionId      String
+  response       String   @db.Text
+  feedback       Json?
+  selfAssessment String?  // "missed" | "partial" | "covered"
+  completedAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission Mission @relation(fields: [missionId], references: [id])
+}
+
+model Progress {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  level             Int      @default(1)
+  completedModules  String[]
+  completedScenarios String[]
+  completedMissions  String[]
+  totalPoints       Int      @default(0)
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BugReport {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  steps       String?  @db.Text
+  severity    String
+  surface     String?
+  email       String?
+  userId      String?
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  mood      String?
+  pains     String[]
+  surface   String?
+  stuck     String?  @db.Text
+  missing   String?  @db.Text
+  nps       Int?
+  email     String?
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+enum Role {
+  PM
+  EM
+  IC
+}
+
+enum AiFamiliarity {
+  NONE
+  BASIC
+  MODERATE
+  ADVANCED
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}

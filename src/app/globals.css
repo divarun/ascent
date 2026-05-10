@@ -1,0 +1,259 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Ascent Design System — paper palette */
+    --background: 47 14% 93%;          /* #F0EFEB paper */
+    --foreground: 40 13% 9%;           /* #1A1814 near-black */
+
+    --card: 44 18% 97%;                /* #F8F7F5 paper surface */
+    --card-foreground: 40 13% 9%;
+
+    --border: 45 6% 86%;               /* #DDDCD9 neutral line */
+    --input: 45 6% 86%;
+    --ring: 40 13% 9%;
+
+    --primary: 40 13% 9%;              /* ink */
+    --primary-foreground: 44 18% 97%;  /* panel */
+
+    --secondary: 43 10% 89%;           /* #E8E6E1 chip */
+    --secondary-foreground: 40 13% 9%;
+
+    --muted: 43 10% 89%;               /* chip */
+    --muted-foreground: 33 6% 38%;     /* #65605A sub */
+
+    --accent: 220 30% 32%;             /* #3A4A6B muted indigo */
+    --accent-foreground: 44 18% 97%;
+
+    --destructive: 22 57% 42%;         /* #A65A2E warm amber-red */
+    --destructive-foreground: 44 18% 97%;
+
+    --radius: 4px;
+
+    /* Extended tokens */
+    --faint: 35 5% 52%;                /* #8A857E */
+    --line-soft: 45 8% 88%;            /* #E5E4E0 */
+    --good: 161 37% 27%;               /* #2C5F4F */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: #1A1814;
+    color: #F8F7F5;
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  .prose-ascent {
+    @apply max-w-none;
+  }
+
+  .prose-ascent > *:first-child {
+    margin-top: 0 !important;
+  }
+
+  /* ── Headings ─────────────────────────────────────────── */
+
+  .prose-ascent h2 {
+    font-family: "Instrument Serif", serif;
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    font-weight: 400;
+    color: #1A1814;
+    margin-top: 52px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #DDDCD9;
+  }
+
+  .prose-ascent h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1814;
+    margin-top: 32px;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Body text ────────────────────────────────────────── */
+
+  .prose-ascent p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #65605A;
+    margin-bottom: 18px;
+  }
+
+  .prose-ascent strong {
+    color: #1A1814;
+    font-weight: 500;
+  }
+
+  /* ── Lists ────────────────────────────────────────────── */
+
+  .prose-ascent ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .prose-ascent ul li {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #65605A;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .prose-ascent ul li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: #8A857E;
+  }
+
+  .prose-ascent ol {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    counter-reset: ol-counter;
+  }
+
+  .prose-ascent ol li {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #65605A;
+    padding-left: 28px;
+    position: relative;
+    counter-increment: ol-counter;
+  }
+
+  .prose-ascent ol li::before {
+    content: counter(ol-counter);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: #8A857E;
+  }
+
+  /* ── Blockquote → key insight card ───────────────────── */
+
+  .prose-ascent blockquote {
+    margin: 28px 0;
+    padding: 16px 20px;
+    background: #F8F7F5;
+    border: 1px solid #DDDCD9;
+    border-left: 3px solid #1A1814;
+    font-style: normal;
+  }
+
+  .prose-ascent blockquote p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: #1A1814;
+    margin-bottom: 0;
+    font-style: italic;
+  }
+
+  /* ── Horizontal rule → section break ─────────────────── */
+
+  .prose-ascent hr {
+    border: none;
+    border-top: 1px solid #DDDCD9;
+    margin: 44px 0;
+  }
+
+  /* ── Inline code ──────────────────────────────────────── */
+
+  .prose-ascent code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    background: #E8E6E1;
+    color: #1A1814;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  /* ── Code blocks ──────────────────────────────────────── */
+
+  .prose-ascent pre {
+    background: #E8E6E1;
+    border: 1px solid #DDDCD9;
+    padding: 20px 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+    border-radius: 2px;
+  }
+
+  .prose-ascent pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 13px;
+    color: #1A1814;
+  }
+
+  /* ── Tables ───────────────────────────────────────────── */
+
+  .prose-ascent table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 28px 0;
+    font-size: 14px;
+  }
+
+  .prose-ascent th {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #65605A;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid #1A1814;
+  }
+
+  .prose-ascent td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #E5E4E0;
+    color: #65605A;
+    line-height: 1.6;
+    vertical-align: top;
+  }
+
+  .prose-ascent tr:last-child td {
+    border-bottom: none;
+  }
+
+  .prose-ascent td strong {
+    color: #1A1814;
+  }
+}
