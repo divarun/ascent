@@ -27,13 +27,13 @@ const CHALLENGE_SCENARIO_SLUGS: Record<string, string[]> = {
 }
 
 const CHALLENGE_MODULE_SLUGS: Record<string, string[]> = {
-  "understanding-ai":        ["what-llms-actually-do", "what-ai-is-bad-at"],
+  "understanding-ai":        ["what-ai-is", "ai-building-blocks", "what-llms-actually-do", "what-ai-is-bad-at"],
   "evaluating-tools":        ["build-vs-buy", "model-selection-basics"],
   "implementing-workflows":  ["ai-ux-human-in-the-loop", "building-reliable-ai-features"],
   "leading-ai-initiatives":  ["leading-ai-at-org-level"],
   "measuring-roi":           ["measuring-ai-roi", "ai-evaluation-reliability"],
   "team-adoption":           ["leading-ai-at-org-level", "ai-ethics-bias"],
-  "applying-ai-daily":       ["ai-coding-assistants", "prompting-is-not-programming"],
+  "applying-ai-daily":       ["prompting-is-not-programming", "agentic-ai"],
   "keeping-up":              ["what-llms-actually-do", "ai-economics-scaling"],
 }
 
@@ -48,6 +48,39 @@ const CHALLENGE_MISSION_SLUGS: Record<string, string[]> = {
   "keeping-up":              ["evaluate-vendor-claim"],
 }
 
+const GOAL_MODULE_SLUGS: Record<string, string[]> = {
+  "make-better-decisions":   ["what-ai-is-bad-at", "ai-evaluation-reliability", "ai-ethics-bias"],
+  "evaluate-vendors":        ["build-vs-buy", "model-selection-basics"],
+  "implement-ai":            ["ai-ux-human-in-the-loop", "agentic-ai", "building-reliable-ai-features"],
+  "lead-initiative":         ["leading-ai-at-org-level", "data-privacy-ai-governance", "ai-ethics-bias"],
+  "build-roadmap":           ["ai-product-failure-modes", "build-vs-buy", "measuring-ai-roi"],
+  "understand-fundamentals": ["what-ai-is", "ai-building-blocks", "what-llms-actually-do"],
+  "boost-productivity":      ["prompting-is-not-programming", "agentic-ai"],
+  "informed-contributor":    ["what-ai-is", "ai-building-blocks", "ai-ethics-bias", "what-ai-is-bad-at"],
+}
+
+const GOAL_SCENARIO_SLUGS: Record<string, string[]> = {
+  "make-better-decisions":   ["hallucinating-executive-demo", "biased-model"],
+  "evaluate-vendors":        ["ai-vendor-evaluation", "build-vs-buy-decision"],
+  "implement-ai":            ["ai-feature-scope", "designing-the-eval"],
+  "lead-initiative":         ["ai-org-question", "ai-team-cant-ship"],
+  "build-roadmap":           ["ai-feature-scope", "expensive-ai-endpoint"],
+  "understand-fundamentals": ["hallucinating-executive-demo", "broken-prompt"],
+  "boost-productivity":      ["broken-prompt", "ai-feature-scope"],
+  "informed-contributor":    ["biased-model", "agent-went-rogue", "legal-compliance-escalation"],
+}
+
+const GOAL_MISSION_SLUGS: Record<string, string[]> = {
+  "make-better-decisions":   ["audit-ai-feature", "create-ai-evaluation-plan"],
+  "evaluate-vendors":        ["evaluate-vendor-claim"],
+  "implement-ai":            ["identify-ai-workflow", "improve-workflow-with-ai"],
+  "lead-initiative":         ["draft-ai-policy", "communicate-ai-decision"],
+  "build-roadmap":           ["write-ai-feature-brief", "create-ai-evaluation-plan"],
+  "understand-fundamentals": ["audit-ai-feature"],
+  "boost-productivity":      ["design-prompt-system", "improve-workflow-with-ai"],
+  "informed-contributor":    ["run-bias-check", "audit-ai-feature"],
+}
+
 // Max difficulty appropriate for each familiarity level
 const FAMILIARITY_MAX_DIFF: Record<string, number> = {
   NONE: 0, BASIC: 0, MODERATE: 1, ADVANCED: 2,
@@ -58,13 +91,16 @@ function sortByChallengeThenDifficulty<T extends { slug: string; difficulty: str
   challenge: string,
   challengeMap: Record<string, string[]>,
   familiarity: string,
+  goals: string[],
+  goalsMap: Record<string, string[]>,
 ): T[] {
   const challengeSlugs = challengeMap[challenge] ?? []
+  const goalSlugs = new Set(goals.flatMap(g => goalsMap[g] ?? []))
   const maxDiff = FAMILIARITY_MAX_DIFF[familiarity] ?? 2
   return [...items].sort((a, b) => {
-    const aMatch = challengeSlugs.includes(a.slug) ? 0 : 1
-    const bMatch = challengeSlugs.includes(b.slug) ? 0 : 1
-    if (aMatch !== bMatch) return aMatch - bMatch
+    const aScore = (challengeSlugs.includes(a.slug) ? 2 : 0) + (goalSlugs.has(a.slug) ? 1 : 0)
+    const bScore = (challengeSlugs.includes(b.slug) ? 2 : 0) + (goalSlugs.has(b.slug) ? 1 : 0)
+    if (aScore !== bScore) return bScore - aScore
     const aDiff = DIFF_ORDER[a.difficulty] ?? 0
     const bDiff = DIFF_ORDER[b.difficulty] ?? 0
     const aFamiliar = aDiff <= maxDiff ? 0 : 1
@@ -129,6 +165,7 @@ export default async function DashboardPage() {
   const userRole = profile.role as string
   const biggestChallenge = (profile.biggestChallenge ?? "") as string
   const aiFamiliarity = (profile.aiFamiliarity ?? "BASIC") as string
+  const userGoals = (profile.goals ?? []) as string[]
   const currentPoints = progress?.totalPoints ?? 0
   const level = calculateLevel(currentPoints)
   const levelName = LEVEL_NAMES[level] ?? "Leader"
@@ -147,6 +184,8 @@ export default async function DashboardPage() {
     biggestChallenge,
     CHALLENGE_MODULE_SLUGS,
     aiFamiliarity,
+    userGoals,
+    GOAL_MODULE_SLUGS,
   )[0] ?? null
 
   // Scenarios: role-filtered, challenge-aware, first incomplete
@@ -160,6 +199,8 @@ export default async function DashboardPage() {
     biggestChallenge,
     CHALLENGE_SCENARIO_SLUGS,
     aiFamiliarity,
+    userGoals,
+    GOAL_SCENARIO_SLUGS,
   )[0] ?? null
 
   // Missions: role-filtered, challenge-aware, first incomplete
@@ -172,6 +213,8 @@ export default async function DashboardPage() {
     biggestChallenge,
     CHALLENGE_MISSION_SLUGS,
     aiFamiliarity,
+    userGoals,
+    GOAL_MISSION_SLUGS,
   )[0] ?? null
 
   // Combined recent activity

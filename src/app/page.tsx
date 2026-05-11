@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 
 const T = {
   bg: "#F0EFEB",
@@ -118,6 +119,8 @@ const inner: React.CSSProperties = { maxWidth: MAX, margin: "0 auto", padding: `
 
 // ── Sections ───────────────────────────────────────────────────────────────
 function Header() {
+  const { data: session } = useSession()
+  const signedIn = !!session?.user
   return (
     <header style={{ borderBottom: `1px solid ${T.line}`, background: T.bg, position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(8px)" }}>
       <div style={{ ...inner, padding: `16px ${PAD}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -127,8 +130,17 @@ function Header() {
             <Link key={label} href={href} style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>{label}</Link>
           ))}
           <span style={{ width: 1, height: 18, background: T.line, display: "inline-block" }} />
-          <Link href="/login" style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>Sign in</Link>
-          <Btn primary href="/learn">Start free</Btn>
+          {signedIn ? (
+            <>
+              <span style={{ fontSize: 13, color: T.sub }}>{session.user?.name ?? session.user?.email}</span>
+              <Btn primary href="/dashboard">Dashboard</Btn>
+            </>
+          ) : (
+            <>
+              <Link href="/login" style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>Sign in</Link>
+              <Btn primary href="/learn">Start free</Btn>
+            </>
+          )}
         </nav>
       </div>
     </header>

@@ -23,6 +23,7 @@ const ROLES = [
   { value: "PM", label: "Product Manager", desc: "Own product decisions and roadmap" },
   { value: "EM", label: "Engineering Manager", desc: "Lead engineering teams and delivery" },
   { value: "IC", label: "Individual Contributor", desc: "Apply AI tools in your day-to-day work" },
+  { value: "OTHER", label: "Other", desc: "Founder, consultant, executive, or other" },
 ]
 
 const COMPANY_STAGES = [
@@ -35,11 +36,29 @@ const COMPANY_STAGES = [
 
 const INDUSTRIES = [
   "SaaS / B2B Software",
-  "Consumer Tech",
-  "Fintech",
+  "Consumer / B2C Tech",
+  "Fintech / Banking",
   "Healthcare / Medtech",
+  "Biotech / Life Sciences",
   "E-commerce / Retail",
-  "Enterprise Software",
+  "Marketplace",
+  "Cybersecurity",
+  "Education / Edtech",
+  "Real Estate / Proptech",
+  "HR / Recruiting",
+  "Marketing / Adtech",
+  "Media / Publishing",
+  "Gaming",
+  "Telecommunications",
+  "Manufacturing / Industrial",
+  "Logistics / Supply Chain",
+  "Energy / Climate Tech",
+  "Legal / Legaltech",
+  "Travel / Hospitality",
+  "Food / Beverage",
+  "Professional Services",
+  "Nonprofit",
+  "Government / Public Sector",
   "Other",
 ]
 
@@ -57,8 +76,6 @@ const CHALLENGES = [
   { value: "leading-ai-initiatives", label: "Leading AI initiatives at work" },
   { value: "measuring-roi",          label: "Measuring AI ROI and impact" },
   { value: "team-adoption",          label: "Getting team buy-in and adoption" },
-  { value: "applying-ai-daily",      label: "Using AI effectively in my own daily work" },
-  { value: "keeping-up",             label: "Keeping up with AI developments relevant to me" },
 ]
 
 const GOALS = [
@@ -127,17 +144,27 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const [form, setForm] = useState({
     role: "",
     companyStage: "",
     industry: "",
     aiFamiliarity: "",
-    biggestChallenge: "",
+    biggestChallenges: [] as string[],
     goals: [] as string[],
   })
 
   function update(key: string, value: string | string[]) {
     setForm((f) => ({ ...f, [key]: value }))
+  }
+
+  function toggleChallenge(value: string) {
+    setForm((f) => ({
+      ...f,
+      biggestChallenges: f.biggestChallenges.includes(value)
+        ? f.biggestChallenges.filter((c) => c !== value)
+        : [...f.biggestChallenges, value],
+    }))
   }
 
   function toggleGoal(value: string) {
@@ -152,13 +179,14 @@ export default function OnboardingPage() {
   function canAdvance() {
     if (step === 0) return !!form.role
     if (step === 1) return !!form.companyStage && !!form.industry
-    if (step === 2) return !!form.aiFamiliarity && !!form.biggestChallenge
+    if (step === 2) return !!form.aiFamiliarity && form.biggestChallenges.length > 0
     if (step === 3) return form.goals.length > 0
     return true
   }
 
   async function handleFinish() {
     setLoading(true)
+    setError("")
     try {
       const res = await fetch("/api/onboarding", {
         method: "POST",
@@ -166,12 +194,13 @@ export default function OnboardingPage() {
         body: JSON.stringify(form),
       })
       if (!res.ok) {
-        console.error("Onboarding API error:", res.status)
+        setError("Something went wrong. Please try again.")
         setLoading(false)
         return
       }
       router.push("/dashboard")
     } catch {
+      setError("Something went wrong. Please try again.")
       setLoading(false)
     }
   }
@@ -263,10 +292,12 @@ export default function OnboardingPage() {
 
               <div>
                 <div style={fieldLabel}>Industry</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                  {INDUSTRIES.map((ind) => (
-                    <button key={ind} onClick={() => update("industry", ind)} style={{ ...optionButton(form.industry === ind), fontSize: 12.5 }}>{ind}</button>
-                  ))}
+                <div style={{ maxHeight: 280, overflowY: "auto", paddingRight: 4 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                    {INDUSTRIES.map((ind) => (
+                      <button key={ind} onClick={() => update("industry", ind)} style={{ ...optionButton(form.industry === ind), fontSize: 12.5 }}>{ind}</button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -297,11 +328,38 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <div style={fieldLabel}>Biggest AI challenge</div>
+                <div style={fieldLabel}>Biggest AI challenges — select all that apply</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {CHALLENGES.map((c) => (
-                    <button key={c.value} onClick={() => update("biggestChallenge", c.value)} style={optionButton(form.biggestChallenge === c.value)}>{c.label}</button>
-                  ))}
+                  {CHALLENGES.map((c) => {
+                    const selected = form.biggestChallenges.includes(c.value)
+                    return (
+                      <button
+                        key={c.value}
+                        onClick={() => toggleChallenge(c.value)}
+                        style={{ ...optionButton(selected), display: "flex", alignItems: "center", gap: 12 }}
+                      >
+                        <div style={{
+                          width: 14,
+                          height: 14,
+                          border: `1.5px solid ${selected ? C.ink : C.line}`,
+                          background: selected ? C.ink : "transparent",
+                          borderRadius: 2,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 120ms",
+                        }}>
+                          {selected && (
+                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5l2.5 2.5L8 3" stroke={C.panel} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                        {c.label}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -353,6 +411,10 @@ export default function OnboardingPage() {
             </div>
           )}
         </div>
+
+        {error && (
+          <p style={{ marginTop: 16, marginBottom: 0, fontSize: 13, color: "#B94A3A", textAlign: "center" }}>{error}</p>
+        )}
 
         {/* Navigation */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24 }}>
