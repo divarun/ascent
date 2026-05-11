@@ -6,7 +6,7 @@ Ascent is a simulation platform, not a course platform. People learn AI through 
 
 ---
 
-![Ascent Landing Page](./images/landing.png)
+![Ascent Landing Page](./images/Landing.png)
 
 ## What it is
 
@@ -19,7 +19,7 @@ Ascent is a simulation platform, not a course platform. People learn AI through 
 ---
 
 
-![Mission Example](./images/mission.png)
+![Mission Example](./images/Mission.png)
 
 
 ## Stack
