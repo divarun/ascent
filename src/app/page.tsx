@@ -31,9 +31,9 @@ const LEVELS = [
 
 
 const AUDIENCE_ROLES = [
-  { tag: "PM", title: "Product managers",        blurb: "You're scoping AI features, evaluating vendor pitches, and answering 'why now' to a CEO who just read a McKinsey deck.",  skills: ["Vendor evaluation", "Scope under uncertainty", "ROI you can defend", "Failure-mode planning"] },
-  { tag: "EM", title: "Engineering managers",    blurb: "You own the build-vs-buy call, the cost curve, and the team that has to ship something reliable on top of a non-deterministic system.", skills: ["Build-vs-buy", "Eval design", "Cost & latency", "Team enablement"] },
-  { tag: "IC", title: "Individual contributors", blurb: "You're the one prompting, evaluating, and shipping. The one who has to know when AI is the right tool — and when it isn't.", skills: ["Working with AI tools", "Reliable AI features", "Prompt evaluation", "Red-teaming"] },
+  { tag: "PM", title: "Product managers",        blurb: "You’re evaluating AI opportunities, assessing vendor claims, and aligning initiatives with clear business priorities and measurable outcomes.",  skills: ["Vendor evaluation", "Scope under uncertainty", "ROI you can defend", "Failure-mode planning"] },
+  { tag: "EM", title: "Engineering managers",    blurb: "You’re responsible for technical direction, platform decisions, and helping teams deliver reliable systems built on probabilistic technologies.", skills: ["Build-vs-buy", "Eval design", "Cost & latency", "Team enablement"] },
+  { tag: "IC", title: "Individual contributors", blurb: "You’re designing, testing, and shipping AI-powered features while determining where AI adds value — and where traditional approaches are more effective.", skills: ["Working with AI tools", "Reliable AI features", "Prompt evaluation", "Red-teaming"] },
 ]
 
 // ── Atoms ──────────────────────────────────────────────────────────────────
