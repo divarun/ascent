@@ -202,11 +202,11 @@ The skills that make good technical writers make good prompt engineers: specific
     {
       question: "Why should prompts be stored in version-controlled files with documented intent, rather than as string literals scattered across the codebase?",
       options: [
-        "Version-controlled prompts are processed faster by LLM APIs because they can be cached at the infrastructure level",
         "Prompts change behavior everywhere they're used; without versioning, you can't reproduce failures, confirm fixes, or prevent regressions from prompt edits",
         "String literals are evaluated at runtime rather than compile time, causing inconsistent behavior across environments",
+        "Version-controlled prompts are processed faster by LLM APIs because they can be cached at the infrastructure level",
       ],
-      correct: 1,
+      correct: 0,
       explanation: "Prompts are behavior specifications for probabilistic systems. A prompt change is a behavior change across every call that uses it. Without version control, you can't answer: 'What prompt was live when that user got a bad output?' Treat prompts like code: review, version, test, and document them.",
     },
   ],

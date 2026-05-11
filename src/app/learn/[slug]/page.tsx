@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { AppShell } from "@/components/layout/AppShell"
 import { Loader2 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { isModuleFree } from "@/config/access"
+import { LevelUpBanner } from "@/components/LevelUpBanner"
 
 const COMPLETED_KEY = "ascent_completed_modules"
 
@@ -39,6 +40,7 @@ function QuizBlock({
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [attempts, setAttempts] = useState(0)
+  const calledCorrect = useRef(false)
 
   const answered = selected !== null
   const correct = answered && selected === question.correct
@@ -47,7 +49,10 @@ function QuizBlock({
     if (answered && correct) return
     setSelected(idx)
     setAttempts((a) => a + 1)
-    if (idx === question.correct) onCorrect()
+    if (idx === question.correct && !calledCorrect.current) {
+      calledCorrect.current = true
+      onCorrect()
+    }
   }
 
   function retry() {
@@ -134,6 +139,7 @@ export default function ModulePage() {
   const [completed, setCompleted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [passedQuestions, setPassedQuestions] = useState<Set<number>>(new Set())
+  const [levelUp, setLevelUp] = useState<{ level: number; name: string } | null>(null)
 
   useEffect(() => {
     if (status === "loading") return
@@ -165,11 +171,16 @@ export default function ModulePage() {
       removeLocalCompletion(slug)
       setCompleted(false)
       setError("Failed to save progress. Please try again.")
+    } else if (res.ok && session) {
+      const data = await res.json()
+      if (data.leveledUp) setLevelUp({ level: data.newLevel, name: data.levelName })
     }
     setCompleting(false)
   }
 
   const quiz: QuizQuestion[] = module?.quiz ?? []
+  const [redoingQuiz, setRedoingQuiz] = useState(false)
+  const showQuiz = quiz.length > 0 && (!completed || redoingQuiz)
   const allPassed = quiz.length === 0 || passedQuestions.size >= quiz.length
   const canComplete = allPassed || completed
 
@@ -230,7 +241,7 @@ export default function ModulePage() {
         </div>
 
         {/* Quiz questions */}
-        {quiz.length > 0 && !completed && (
+        {showQuiz && (
           <div style={{ marginTop: 40 }}>
             {quiz.map((q: QuizQuestion, i: number) => (
               <QuizBlock
@@ -247,16 +258,30 @@ export default function ModulePage() {
         {/* Complete strip */}
         <div style={{ marginTop: 56, paddingTop: 28, borderTop: `1px solid ${C.line}` }}>
           {completed ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", color: C.good }}>
-                ✓ MODULE COMPLETE{session ? " — +25 PTS" : ""}
-              </span>
-              <button
-                onClick={() => router.push("/learn")}
-                style={{ marginLeft: 16, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: C.sub, background: "none", border: "none", cursor: "pointer" }}
-              >
-                ← Back to Foundation
-              </button>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", color: C.good }}>
+                  ✓ MODULE COMPLETE{session ? " — +25 PTS" : ""}
+                </span>
+                <button
+                  onClick={() => router.push("/learn")}
+                  style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: C.sub, background: "none", border: "none", cursor: "pointer" }}
+                >
+                  ← Back to Foundation
+                </button>
+                {quiz.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setRedoingQuiz((r) => !r)
+                      setPassedQuestions(new Set())
+                    }}
+                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: C.sub, background: "none", border: `1px solid ${C.line}`, borderRadius: 4, padding: "5px 12px", cursor: "pointer" }}
+                  >
+                    {redoingQuiz ? "Hide quiz" : "Redo quiz →"}
+                  </button>
+                )}
+              </div>
+              {levelUp && <LevelUpBanner level={levelUp.level} name={levelUp.name} />}
             </div>
           ) : (
             <div>

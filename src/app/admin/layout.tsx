@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Admin — Ascent",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 
 const NAV_LINKS = [
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/content", label: "Content" },
   { href: "/admin/feedback", label: "Feedback" },
   { href: "/admin/bug-reports", label: "Bug Reports" },
 ]
@@ -19,13 +21,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           Ascent / Admin
         </span>
         {NAV_LINKS.map((link) => (
-          <a
+          <Link
             key={link.href}
             href={link.href}
             style={{ fontSize: 13.5, color: "#D4D1CB", textDecoration: "none", opacity: 0.8 }}
           >
             {link.label}
-          </a>
+          </Link>
         ))}
       </nav>
       <main style={{ padding: "36px 32px", maxWidth: 1200, margin: "0 auto" }}>

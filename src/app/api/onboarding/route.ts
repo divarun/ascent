@@ -7,11 +7,9 @@ import { z } from "zod"
 
 const schema = z.object({
   role: z.enum(["PM", "EM", "IC"]),
-  companyStage: z.string(),
-  industry: z.string(),
   aiFamiliarity: z.enum(["NONE", "BASIC", "MODERATE", "ADVANCED"]),
-  biggestChallenge: z.string(),
-  goals: z.array(z.string()),
+  biggestChallenge: z.string().min(1),
+  goals: z.array(z.string()).min(1),
 })
 
 export async function POST(req: NextRequest) {
@@ -30,7 +28,7 @@ export async function POST(req: NextRequest) {
       db.profile.upsert({
         where: { userId: session.user.id },
         update: { ...data, ...scores },
-        create: { userId: session.user.id, ...data, ...scores },
+        create: { userId: session.user.id, companyStage: "", industry: "", ...data, ...scores },
       }),
       db.progress.upsert({
         where: { userId: session.user.id },

@@ -5,11 +5,11 @@
 
 export interface OnboardingData {
   role: "PM" | "EM" | "IC"
-  companyStage: string
-  industry: string
   aiFamiliarity: "NONE" | "BASIC" | "MODERATE" | "ADVANCED"
   biggestChallenge: string
   goals: string[]
+  companyStage?: string
+  industry?: string
 }
 
 export interface ReadinessProfile {

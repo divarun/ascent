@@ -47,6 +47,7 @@ export default function SignupPage() {
         setLoading(false)
         return
       }
+      localStorage.removeItem("ascent_completed_modules")
       const result = await signIn("credentials", { email, password, redirect: false })
       setLoading(false)
       if (result?.error) router.push("/login")
@@ -179,17 +180,17 @@ export default function SignupPage() {
           {[
             {
               label: "01 — Foundation",
-              meta: "20 modules",
+              meta: "Modules",
               desc: "What LLMs actually do. Build vs buy. Evals. Ethics. Security. Agentic AI. The full technical and strategic picture.",
             },
             {
               label: "02 — Scenarios",
-              meta: "15 decision scenarios",
+              meta: "Decision simulations",
               desc: "Vendor pitches, scope fights, biased models, rogue agents, legal escalations. Write your reasoning under pressure.",
             },
             {
               label: "03 — Missions",
-              meta: "12 applied exercises",
+              meta: "Applied exercises",
               desc: "Design a prompt system. Run a bias check. Write a feature brief. Completed on your real work, not hypotheticals.",
             },
           ].map((track, i) => (
@@ -216,14 +217,6 @@ export default function SignupPage() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", paddingTop: 24, borderTop: "1px solid rgba(248,247,245,0.15)" }}>
-          {[["20", "modules"], ["15", "scenarios"], ["12", "missions"]].map(([n, l]) => (
-            <div key={l}>
-              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 36, lineHeight: 1, color: "#F8F7F5" }}>{n}</div>
-              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.12em", color: "rgba(248,247,245,0.5)", textTransform: "uppercase", marginTop: 6 }}>{l}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   )

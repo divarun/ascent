@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Sidebar } from "./Sidebar"
+import { appConfig } from "@/config/app"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -11,15 +12,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
         <footer className="max-w-5xl mx-auto w-full px-14 py-6 border-t border-border flex items-center justify-between">
           <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A" }}>
-            ASCENT · v1.0
+            ASCENT · v{appConfig.version}
           </span>
           <Link
-            href="/bug-report"
+            href={appConfig.bugReportUrl}
             style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textDecoration: "none" }}
             className="hover:text-foreground transition-colors"
           >
             Report a Bug →
           </Link>
+          <Link
+                      href={appConfig.feedbackUrl}
+                      style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textDecoration: "none" }}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      Submit Feedback →
+                    </Link>
         </footer>
       </div>
     </div>

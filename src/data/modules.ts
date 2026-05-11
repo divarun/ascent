@@ -1,4 +1,4 @@
-import { whatAiIs } from "./modules/what-ai-is"
+import { whatAiIs } from "./modules/what-is-ai"
 import { aiBuildingBlocks } from "./modules/ai-building-blocks"
 import { whatLlmsActuallyDo } from "./modules/what-llms-actually-do"
 import { whatAiIsBadAt } from "./modules/what-ai-is-bad-at"
@@ -18,26 +18,32 @@ import { aiInProductionMonitoringObservability } from "./modules/ai-in-productio
 import { buildingReliableAiFeatures } from "./modules/building-reliable-ai-features"
 import { measuringAiRoi } from "./modules/measuring-ai-roi"
 import { leadingAiAtOrgLevel } from "./modules/leading-ai-at-org-level"
+import { aiEconomicsScaling } from "./modules/ai-economics-scaling"
+import { aiCodingAssistants } from "./modules/ai-coding-assistants"
 
+// enabled: true  = visible at launch
+// enabled: false = queued for a future wave (toggle via admin)
 export const sampleModules = [
-  whatAiIs,
-  aiBuildingBlocks,
-  whatLlmsActuallyDo,
-  whatAiIsBadAt,
-  promptingIsNotProgramming,
-  modelSelectionBasics,
-  buildVsBuy,
-  aiProductFailureModes,
-  aiUxHumanInTheLoop,
-  ragContextMemory,
-  agenticAi,
-  fineTuningModelCustomization,
-  aiEthicsBias,
-  dataPrivacyAiGovernance,
-  aiSecurityPromptInjection,
-  aiEvaluationReliability,
-  aiInProductionMonitoringObservability,
-  buildingReliableAiFeatures,
-  measuringAiRoi,
-  leadingAiAtOrgLevel,
+  { ...whatAiIs,                           enabled: true  },
+  { ...aiBuildingBlocks,                   enabled: true  },
+  { ...whatLlmsActuallyDo,                 enabled: true  },
+  { ...whatAiIsBadAt,                      enabled: true  },
+  { ...promptingIsNotProgramming,          enabled: true  },
+  { ...modelSelectionBasics,               enabled: false },
+  { ...buildVsBuy,                         enabled: false },
+  { ...aiProductFailureModes,              enabled: false },
+  { ...aiUxHumanInTheLoop,                 enabled: false },
+  { ...ragContextMemory,                   enabled: false },
+  { ...agenticAi,                          enabled: false },
+  { ...fineTuningModelCustomization,       enabled: false },
+  { ...aiEthicsBias,                       enabled: false },
+  { ...dataPrivacyAiGovernance,            enabled: false },
+  { ...aiSecurityPromptInjection,          enabled: false },
+  { ...aiEvaluationReliability,            enabled: false },
+  { ...aiInProductionMonitoringObservability, enabled: false },
+  { ...buildingReliableAiFeatures,         enabled: false },
+  { ...measuringAiRoi,                     enabled: false },
+  { ...leadingAiAtOrgLevel,                enabled: false },
+  { ...aiEconomicsScaling,                 enabled: false },
+  { ...aiCodingAssistants,                 enabled: false },
 ]

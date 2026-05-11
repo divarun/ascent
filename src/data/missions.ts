@@ -11,18 +11,19 @@ import { writeAiPostmortem } from "./missions/write-ai-postmortem"
 import { auditAiFeature } from "./missions/audit-ai-feature"
 import { communicateAiDecision } from "./missions/communicate-ai-decision"
 
-
+// enabled: true  = visible at launch
+// enabled: false = queued for a future wave (toggle via admin)
 export const sampleMissions = [
-  identifyAiWorkflow,
-  draftAiPolicy,
-  evaluateVendorClaim,
-  createAiEvaluationPlan,
-  redTeamAiWorkflow,
-  improveWorkflowWithAi,
-  designPromptSystem,
-  runBiasCheck,
-  writeAiFeatureBrief,
-  writeAiPostmortem,
-  auditAiFeature,
-  communicateAiDecision,
+  { ...identifyAiWorkflow,       enabled: true  },
+  { ...evaluateVendorClaim,      enabled: true  },
+  { ...draftAiPolicy,            enabled: false },
+  { ...auditAiFeature,           enabled: false },
+  { ...createAiEvaluationPlan,   enabled: false },
+  { ...designPromptSystem,       enabled: false },
+  { ...redTeamAiWorkflow,        enabled: false },
+  { ...writeAiFeatureBrief,      enabled: false },
+  { ...improveWorkflowWithAi,    enabled: false },
+  { ...runBiasCheck,             enabled: false },
+  { ...writeAiPostmortem,        enabled: false },
+  { ...communicateAiDecision,    enabled: false },
 ]

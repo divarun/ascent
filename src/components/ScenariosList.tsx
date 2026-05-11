@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { GUEST_SCENARIOS } from "@/config/access"
-
-const ROLE_KEY = "ascent_guest_role"
+import { useContentFilters } from "@/hooks/useContentFilters"
+import { FilterBar } from "@/components/FilterBar"
 
 type Scenario = {
   id: string
@@ -27,7 +26,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "
   const colors =
     tone === "good" ? { border: "#2C5F4F", color: "#2C5F4F" } :
     tone === "warn" ? { border: "#A65A2E", color: "#A65A2E" } :
-    { border: "#DDDCD9", color: "#65605A" }
+                      { border: "#DDDCD9",  color: "#65605A" }
   return (
     <span
       style={{
@@ -50,57 +49,21 @@ function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "
 }
 
 export function ScenariosList({ scenarios, isGuest }: { scenarios: Scenario[]; isGuest: boolean }) {
-  const [filter, setFilter] = useState<string>("ALL")
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem(ROLE_KEY)
-    if (saved) setFilter(saved)
-  }, [])
-
-  function selectFilter(role: string) {
-    const next = filter === role ? "ALL" : role
-    setFilter(next)
-    if (next !== "ALL") localStorage.setItem(ROLE_KEY, next)
-    else localStorage.removeItem(ROLE_KEY)
-  }
-
-  const visible = filter === "ALL"
-    ? scenarios
-    : scenarios.filter((s) => s.roles.includes(filter))
+  const { role, difficulty, selectRole, selectDifficulty, resetAll, visible, showRoleFilter, showDiffFilter, mounted } = useContentFilters(scenarios)
 
   if (!mounted) return null
 
   return (
     <div>
-      {/* Filter */}
-      <div className="flex items-center gap-1.5 mb-8">
-        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: "#65605A", letterSpacing: "0.12em", marginRight: 6 }}>
-          FILTER /
-        </span>
-        {["ALL", "PM", "EM", "IC"].map((r) => (
-          <button
-            key={r}
-            onClick={() => selectFilter(r)}
-            style={{
-              fontFamily: '"JetBrains Mono", monospace',
-              fontSize: 11,
-              letterSpacing: "0.1em",
-              padding: "6px 12px",
-              borderRadius: 999,
-              border: `1px solid ${filter === r ? "#1A1814" : "#DDDCD9"}`,
-              background: filter === r ? "#1A1814" : "transparent",
-              color: filter === r ? "#F8F7F5" : "#65605A",
-              cursor: "pointer",
-            }}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
+      <FilterBar
+        role={role}
+        difficulty={difficulty}
+        showRoleFilter={showRoleFilter}
+        showDiffFilter={showDiffFilter}
+        onRoleChange={selectRole}
+        onDifficultyChange={selectDifficulty}
+      />
 
-      {/* 2-column grid */}
       <div
         style={{
           display: "grid",
@@ -109,7 +72,7 @@ export function ScenariosList({ scenarios, isGuest }: { scenarios: Scenario[]; i
           borderLeft: "1px solid #DDDCD9",
         }}
       >
-        {visible.map((s) => {
+        {visible.map(s => {
           const locked = isGuest && !GUEST_SCENARIOS.has(s.slug)
           const bg = locked ? "#ECEAE6" : "#F0EFEB"
           const bgHover = locked ? "#EAE8E3" : "#F8F7F5"
@@ -127,8 +90,8 @@ export function ScenariosList({ scenarios, isGuest }: { scenarios: Scenario[]; i
                 minHeight: 200,
                 transition: "background 140ms",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = bgHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = bg)}
+              onMouseEnter={e => (e.currentTarget.style.background = bgHover)}
+              onMouseLeave={e => (e.currentTarget.style.background = bg)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex gap-1.5">
@@ -172,10 +135,8 @@ export function ScenariosList({ scenarios, isGuest }: { scenarios: Scenario[]; i
 
         {visible.length === 0 && (
           <div className="col-span-2 py-12 text-center" style={{ color: "#65605A", fontSize: 14 }}>
-            No Scenarios for {filter} yet.{" "}
-            <button onClick={() => selectFilter(filter)} className="underline hover:no-underline">
-              Show all
-            </button>
+            No scenarios match those filters.{" "}
+            <button onClick={resetAll} className="underline hover:no-underline">Show all</button>
           </div>
         )}
       </div>

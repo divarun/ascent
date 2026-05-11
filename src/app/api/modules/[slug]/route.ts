@@ -13,16 +13,17 @@ export async function GET(
   const dbModule = await db.module.findUnique({ where: { slug: params.slug } })
 
   if (dbModule) {
-    const progress = session?.user?.id
-      ? await db.progress.findUnique({
-          where: { userId: session.user.id },
-          select: { completedModules: true },
-        })
-      : null
+    const [progress, staticModule] = await Promise.all([
+      session?.user?.id
+        ? db.progress.findUnique({ where: { userId: session.user.id }, select: { completedModules: true } })
+        : Promise.resolve(null),
+      Promise.resolve(sampleModules.find((m) => m.slug === params.slug)),
+    ])
 
     return NextResponse.json({
       ...dbModule,
-      completed: progress?.completedModules.includes(dbModule.id) ?? false,
+      quiz: Array.isArray(dbModule.quiz) && (dbModule.quiz as unknown[]).length > 0 ? dbModule.quiz : (staticModule?.quiz ?? []),
+      completed: progress?.completedModules?.includes(dbModule.id) ?? false,
     })
   }
 

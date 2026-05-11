@@ -80,12 +80,12 @@ You don't need to be a lawyer. You need to know enough to identify when to invol
 - You must disclose what categories of personal data you collect, for what purposes, and with whom you share it. AI vendor disclosure belongs in this list.
 - Sensitive personal information (health data, precise geolocation, financial account data, racial/ethnic origin) has additional restrictions.
 
-**EU AI Act (in force 2024):**
-Categorizes AI systems by risk. Relevant for governance:
-- **Prohibited uses:** Real-time biometric surveillance in public spaces, social scoring, subliminal manipulation. These are absolute prohibitions regardless of technical capability.
-- **High-risk systems:** Employment, education, credit, healthcare, law enforcement, critical infrastructure. Mandatory conformity assessment, bias audits, human oversight, transparency obligations, and registration in an EU database. Applies to you if you deploy into the EU market.
-- **General purpose AI (GPAI) model obligations:** If you fine-tune or deploy foundation models, additional transparency and copyright compliance obligations apply.
-- **Limited-risk systems:** Chatbots and AI-generated content must be disclosed as AI to users.
+**EU AI Act (entered into force August 2024, phased application):**
+Categorizes AI systems by risk and applies on a staggered schedule. Relevant for governance:
+- **Prohibited uses (in effect February 2025):** Real-time biometric surveillance in public spaces (with narrow exceptions), social scoring, subliminal manipulation, predictive policing based solely on profiling, emotion recognition at workplaces and schools. These are absolute prohibitions already in force.
+- **High-risk systems (rules apply August 2026):** Employment, education, credit, healthcare, law enforcement, critical infrastructure. Mandatory conformity assessment, bias audits, human oversight, transparency obligations, and registration in an EU database. Applies to any company deploying into the EU market. Organizations should be building toward compliance now.
+- **General purpose AI (GPAI) model obligations (in effect August 2025):** If you fine-tune or deploy foundation models, transparency and copyright compliance obligations now apply.
+- **Limited-risk systems (transparency rules apply August 2026):** Chatbots and AI-generated content must be disclosed as AI to users.
 
 **Sector-specific regulations:**
 HIPAA (US health data), FERPA (US education data), GLBA (US financial data), and their international equivalents layer on top of general privacy law. If your AI feature touches any of these domains, involve legal before shipping.

@@ -13,7 +13,7 @@ const navItems = [
   { href: "/learn",     label: "Foundation", authOnly: false },
   { href: "/scenarios", label: "Scenarios", authOnly: false },
   { href: "/missions",  label: "Missions",  authOnly: false },
-  { href: "/feedback",  label: "Feedback",  authOnly: false },
+  { href: "/profile",   label: "Profile",   authOnly: true },
 ]
 
 function AscentMark({ small = false }: { small?: boolean }) {
@@ -94,8 +94,7 @@ export function Sidebar() {
       {/* Footer */}
       {signedIn ? (
         <div className="px-4 py-4 border-t border-border">
-          <div className="text-sm font-medium text-foreground truncate">{session.user.name ?? session.user.email}</div>
-          <div className="text-xs text-muted-foreground truncate mb-2.5">{session.user.email}</div>
+          <div className="text-sm font-medium text-foreground truncate mb-2.5">{session.user.name ?? session.user.email}</div>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"

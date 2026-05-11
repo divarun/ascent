@@ -15,12 +15,12 @@ You'll encounter the same set of terms repeatedly when working with AI systems. 
 
 **Tokens**
 
-Tokens are the basic unit LLMs process — roughly 4 characters or ¾ of a word. "Hello world" is approximately 2 tokens. 1,000 tokens is approximately 750 words.
+Tokens are the basic unit LLMs process — roughly 3–4 characters, or about ¾ of a word in English. "Hello world" is approximately 2–3 tokens. 1,000 tokens is approximately 750 words, though this varies by model and content type (technical content, numbers, and URLs tend to be more token-heavy).
 
 Why this matters:
 
 - API pricing is per token. Every word in your system prompt is paid for on every request.
-- Context window limits are measured in tokens. A 128K-token context window is roughly 96,000 words — about two novels.
+- Context window limits are measured in tokens. Models today range widely — from 128K tokens (roughly 96,000 words) up to 1 million tokens or more for some frontier models.
 - Non-English languages are often tokenized less efficiently, meaning the same content costs more tokens in some languages than in English.
 
 **Hallucination**
@@ -85,7 +85,7 @@ Design principle: match agent autonomy to your tolerance for unrecoverable error
 
 **Multimodal**
 
-Multimodal AI models accept input beyond text — images, audio, video, documents, and combinations of these. Most frontier models (GPT-4o, Claude 3.5, Gemini) are multimodal. This enables use cases like analyzing screenshots, processing recorded meetings, reading handwritten forms, and interpreting charts and diagrams.
+Multimodal AI models accept input beyond text — images, audio, video, documents, and combinations of these. Most frontier models are now multimodal as standard. This enables use cases like analyzing screenshots, processing recorded meetings, reading handwritten forms, and interpreting charts and diagrams.
 
 ### Common Misconceptions
 

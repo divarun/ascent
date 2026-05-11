@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { ResolveButton } from "@/components/admin/ResolveButton"
 
 export const dynamic = "force-dynamic"
 
@@ -70,6 +71,7 @@ export default async function AdminFeedbackPage() {
                 <span style={{ color: "#3A3A38" }}>Guest</span>
               )}
               <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, marginLeft: "auto", color: "#3A3A38" }}>{f.id}</span>
+              <ResolveButton id={f.id} status={f.status ?? "open"} endpoint="feedback" resolvedLabel="archived" />
             </div>
           </div>
         ))}

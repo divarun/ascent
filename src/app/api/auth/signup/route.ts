@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
       data: { name, email, passwordHash },
     })
 
-    // Create initial progress record
     await db.progress.create({
       data: { userId: user.id },
     })

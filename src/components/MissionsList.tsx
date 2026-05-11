@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { GUEST_MISSIONS } from "@/config/access"
-
-const ROLE_KEY = "ascent_guest_role"
+import { useContentFilters } from "@/hooks/useContentFilters"
+import { FilterBar } from "@/components/FilterBar"
 
 type Mission = {
   id: string
@@ -26,7 +25,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "
   const colors =
     tone === "good" ? { border: "#2C5F4F", color: "#2C5F4F" } :
     tone === "warn" ? { border: "#A65A2E", color: "#A65A2E" } :
-    { border: "#DDDCD9", color: "#65605A" }
+                      { border: "#DDDCD9",  color: "#65605A" }
   return (
     <span
       style={{
@@ -49,57 +48,21 @@ function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "
 }
 
 export function MissionsList({ missions, isGuest }: { missions: Mission[]; isGuest: boolean }) {
-  const [filter, setFilter] = useState<string>("ALL")
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem(ROLE_KEY)
-    if (saved) setFilter(saved)
-  }, [])
-
-  function selectFilter(role: string) {
-    const next = filter === role ? "ALL" : role
-    setFilter(next)
-    if (next !== "ALL") localStorage.setItem(ROLE_KEY, next)
-    else localStorage.removeItem(ROLE_KEY)
-  }
-
-  const visible = filter === "ALL"
-    ? missions
-    : missions.filter((m) => m.roles.includes(filter))
+  const { role, difficulty, selectRole, selectDifficulty, resetAll, visible, showRoleFilter, showDiffFilter, mounted } = useContentFilters(missions)
 
   if (!mounted) return null
 
   return (
     <div>
-      {/* Filter */}
-      <div className="flex items-center gap-1.5 mb-6">
-        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: "#65605A", letterSpacing: "0.12em", marginRight: 6 }}>
-          FILTER /
-        </span>
-        {["ALL", "PM", "EM", "IC"].map((r) => (
-          <button
-            key={r}
-            onClick={() => selectFilter(r)}
-            style={{
-              fontFamily: '"JetBrains Mono", monospace',
-              fontSize: 11,
-              letterSpacing: "0.1em",
-              padding: "6px 12px",
-              borderRadius: 999,
-              border: `1px solid ${filter === r ? "#1A1814" : "#DDDCD9"}`,
-              background: filter === r ? "#1A1814" : "transparent",
-              color: filter === r ? "#F8F7F5" : "#65605A",
-              cursor: "pointer",
-            }}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
+      <FilterBar
+        role={role}
+        difficulty={difficulty}
+        showRoleFilter={showRoleFilter}
+        showDiffFilter={showDiffFilter}
+        onRoleChange={selectRole}
+        onDifficultyChange={selectDifficulty}
+      />
 
-      {/* List */}
       <div className="flex flex-col border-t border-border">
         {visible.map((m, i) => {
           const locked = isGuest && !GUEST_MISSIONS.has(m.slug)
@@ -157,8 +120,8 @@ export function MissionsList({ missions, isGuest }: { missions: Mission[]; isGue
               href="/signup"
               className="no-underline transition-colors duration-150"
               style={rowStyle}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#F0EFEB")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              onMouseEnter={e => (e.currentTarget.style.background = "#F0EFEB")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               {inner}
             </Link>
@@ -168,8 +131,8 @@ export function MissionsList({ missions, isGuest }: { missions: Mission[]; isGue
               href={`/missions/${m.slug}`}
               className="no-underline transition-colors duration-150"
               style={rowStyle}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#E8E6E1")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              onMouseEnter={e => (e.currentTarget.style.background = "#E8E6E1")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               {inner}
             </Link>
@@ -178,7 +141,8 @@ export function MissionsList({ missions, isGuest }: { missions: Mission[]; isGue
 
         {visible.length === 0 && (
           <div className="py-12 text-center" style={{ color: "#65605A", fontSize: 14 }}>
-            No missions for {filter} yet.
+            No missions match those filters.{" "}
+            <button onClick={resetAll} className="underline hover:no-underline">Show all</button>
           </div>
         )}
       </div>

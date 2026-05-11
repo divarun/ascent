@@ -14,20 +14,22 @@ import { promptThatLeaked } from "./scenarios/prompt-that-leaked"
 import { silentRollback } from "./scenarios/silent-rollback"
 import { aiOrgQuestion } from "./scenarios/ai-org-question"
 
+// enabled: true  = visible at launch
+// enabled: false = queued for a future wave (toggle via admin)
 export const sampleScenarios = [
-  aiVendorEvaluation,
-  aiFeatureScope,
-  buildVsBuyDecision,
-  hallucinatingExecutiveDemo,
-  legalComplianceEscalation,
-  aiTeamCantShip,
-  brokenPrompt,
-  expensiveAiEndpoint,
-  biasedModel,
-  agentWentRogue,
-  enterpriseDataBlocker,
-  designingTheEval,
-  promptThatLeaked,
-  silentRollback,
-  aiOrgQuestion,
+  { ...hallucinatingExecutiveDemo, enabled: true  },
+  { ...aiVendorEvaluation,         enabled: true  },
+  { ...brokenPrompt,               enabled: true  },
+  { ...aiFeatureScope,             enabled: false },
+  { ...buildVsBuyDecision,         enabled: false },
+  { ...biasedModel,                enabled: false },
+  { ...legalComplianceEscalation,  enabled: false },
+  { ...agentWentRogue,             enabled: false },
+  { ...designingTheEval,           enabled: false },
+  { ...expensiveAiEndpoint,        enabled: false },
+  { ...aiTeamCantShip,             enabled: false },
+  { ...aiOrgQuestion,              enabled: false },
+  { ...promptThatLeaked,           enabled: false },
+  { ...enterpriseDataBlocker,      enabled: false },
+  { ...silentRollback,             enabled: false },
 ]

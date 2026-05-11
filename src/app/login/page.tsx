@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 
@@ -20,8 +20,9 @@ function AscentMark() {
   )
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -36,7 +37,7 @@ export default function LoginPage() {
     const result = await signIn("credentials", { email, password, redirect: false })
     setLoading(false)
     if (result?.error) setError("Invalid email or password.")
-    else router.push("/dashboard")
+    else router.push(searchParams.get("callbackUrl") ?? "/dashboard")
   }
 
   return (
@@ -107,6 +108,9 @@ export default function LoginPage() {
               </button>
 
               <div style={{ marginTop: 18, fontSize: 13, color: "#65605A" }}>
+                <Link href="/forgot-password" style={{ color: "#1A1814" }}>Forgot password?</Link>
+              </div>
+              <div style={{ marginTop: 10, fontSize: 13, color: "#65605A" }}>
                 New here?{" "}
                 <Link href="/signup" style={{ color: "#1A1814" }}>Create an account</Link>
                 {" "}or{" "}
@@ -128,15 +132,15 @@ export default function LoginPage() {
             Build AI judgment. One decision at a time.
           </p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", paddingTop: 24, borderTop: "1px solid rgba(251,248,242,0.15)" }}>
-          {[["20", "modules"], ["15", "scenarios"], ["12", "missions"]].map(([n, l]) => (
-            <div key={l}>
-              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 36, lineHeight: 1, color: "#F8F7F5" }}>{n}</div>
-              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.12em", color: "rgba(251,248,242,0.6)", textTransform: "uppercase", marginTop: 6 }}>{l}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

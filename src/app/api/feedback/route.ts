@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { z } from "zod"
 
 const schema = z.object({
@@ -15,6 +16,11 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  if (!rateLimit(`feedback:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+  }
+
   try {
     const parsed = schema.safeParse(await req.json())
     if (!parsed.success) {

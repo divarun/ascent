@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { ResolveButton } from "@/components/admin/ResolveButton"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +58,7 @@ export default async function AdminBugReportsPage() {
 
             <Field label="Description">{r.description}</Field>
             {r.steps && <Field label="Steps to reproduce">{r.steps}</Field>}
+            {r.device && <Field label="Browser / device">{r.device}</Field>}
 
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1E1E1C", display: "flex", gap: 24, fontSize: 12, color: "#65605A" }}>
               {r.email && <span>✉ {r.email}</span>}
@@ -66,6 +68,7 @@ export default async function AdminBugReportsPage() {
                 <span style={{ color: "#3A3A38" }}>Anonymous</span>
               )}
               <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, marginLeft: "auto", color: "#3A3A38" }}>{r.id}</span>
+              <ResolveButton id={r.id} status={r.status ?? "open"} endpoint="bug-reports" resolvedLabel="resolved" />
             </div>
           </div>
         ))}

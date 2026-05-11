@@ -1,15 +1,28 @@
 "use client"
 
-import { useState } from "react"
-import { AppShell } from "@/components/layout/AppShell"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
+
+function AscentMark() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <svg width={18} height={18} viewBox="0 0 22 22" fill="none" aria-hidden>
+        <path d="M2 18 L8 7 L11 12 L14 4 L20 18 Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none" />
+        <line x1="2" y1="18.6" x2="20" y2="18.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+      <span style={{ fontFamily: '"Instrument Serif", serif', fontSize: 20, lineHeight: 1, letterSpacing: "-0.01em" }}>
+        Ascent
+      </span>
+    </div>
+  )
+}
 
 const SURFACES = [
   "Dashboard",
-  "Foundation / Learn",
+  "Foundation",
   "Scenarios",
   "Missions",
-  "Basics",
   "Onboarding",
   "Sign-up / Login",
   "Feedback form",
@@ -48,10 +61,12 @@ type FormData = {
   surface: string
   description: string
   steps: string
+  device: string
   email: string
 }
 
 export default function BugReportPage() {
+  const { data: session } = useSession()
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -61,8 +76,18 @@ export default function BugReportPage() {
     surface: "",
     description: "",
     steps: "",
+    device: "",
     email: "",
   })
+
+  const sessionEmailApplied = useRef(false)
+  const sessionEmail = session?.user?.email
+  useEffect(() => {
+    if (sessionEmail && !sessionEmailApplied.current) {
+      sessionEmailApplied.current = true
+      setData(d => ({ ...d, email: d.email || sessionEmail }))
+    }
+  }, [sessionEmail])
 
   const inputStyle = {
     width: "100%",
@@ -101,7 +126,13 @@ export default function BugReportPage() {
 
   if (submitted) {
     return (
-      <AppShell>
+      <div className="min-h-screen bg-background">
+        <header style={{ borderBottom: "1px solid #DDDCD9", padding: "0 56px", height: 52, display: "flex", alignItems: "center" }}>
+          <Link href="/" style={{ color: "#1A1814", textDecoration: "none" }}>
+            <AscentMark />
+          </Link>
+        </header>
+        <main className="max-w-5xl mx-auto px-14 py-14 w-full">
         <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
           <Kicker>Bug Report</Kicker>
           <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
@@ -118,7 +149,7 @@ export default function BugReportPage() {
               Back to learning
             </Link>
             <button
-              onClick={() => { setSubmitted(false); setData({ title: "", severity: "", surface: "", description: "", steps: "", email: "" }) }}
+              onClick={() => { setSubmitted(false); setData({ title: "", severity: "", surface: "", description: "", steps: "", device: "", email: "" }) }}
               style={{ background: "transparent", border: "none", fontSize: 13.5, color: "#65605A", cursor: "pointer", padding: "11px 4px" }}
             >
               Report another →
@@ -128,12 +159,19 @@ export default function BugReportPage() {
         <div style={{ marginTop: 48, padding: 24, border: "1px dashed #DDDCD9", maxWidth: 720, fontSize: 13.5, color: "#65605A", lineHeight: 1.6 }}>
           <strong style={{ color: "#1A1814" }}>What happens next.</strong> Bug reports are triaged by severity. Broken issues go to the top of the queue. We don&apos;t share your email with anyone outside the team.
         </div>
-      </AppShell>
+        </main>
+      </div>
     )
   }
 
   return (
-    <AppShell>
+    <div className="min-h-screen bg-background">
+      <header style={{ borderBottom: "1px solid #DDDCD9", padding: "0 56px", height: 52, display: "flex", alignItems: "center" }}>
+        <Link href="/" style={{ color: "#1A1814", textDecoration: "none" }}>
+          <AscentMark />
+        </Link>
+      </header>
+      <main className="max-w-5xl mx-auto px-14 py-14 w-full">
       {/* Page header */}
       <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
         <Kicker>Bug Report</Kicker>
@@ -218,8 +256,19 @@ export default function BugReportPage() {
             />
           </Section>
 
+          {/* Device */}
+          <Section title="06 — Browser / device?" sub="Optional. Helps us reproduce platform-specific issues.">
+            <input
+              type="text"
+              placeholder="e.g. Safari on iPhone 15, or Chrome on Windows"
+              value={data.device}
+              onChange={(e) => setData({ ...data, device: e.target.value })}
+              style={{ ...inputStyle, resize: undefined }}
+            />
+          </Section>
+
           {/* Email */}
-          <Section title="06 — Email for follow-up?" sub="Optional. Only used to ask for more context or share a fix.">
+          <Section title="07 — Email for follow-up?" sub={sessionEmail ? "Pre-filled from your account. Edit if you'd prefer a different address." : "Optional. Used to ask for more context, share a fix, or receive a screenshot request."}>
             <input
               type="email"
               placeholder="you@work.com"
@@ -237,7 +286,7 @@ export default function BugReportPage() {
           )}
           <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid #DDDCD9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A" }}>
-              {[data.title && "title", data.severity && "severity", data.description && "description"].filter(Boolean).length} / 3 REQUIRED FIELDS
+              {[data.title.trim() && "title", data.severity && "severity", data.description.trim() && "description"].filter(Boolean).length} / 3 REQUIRED FIELDS
             </div>
             <button
               onClick={handleSubmit}
@@ -266,11 +315,9 @@ export default function BugReportPage() {
               ))}
             </ul>
           </div>
-<div style={{ padding: 18, border: "1px dashed #DDDCD9", fontSize: 12.5, color: "#65605A", lineHeight: 1.55 }}>
-            Reports are read by a human. Your email, if provided, is never shared outside the team.
-          </div>
         </aside>
       </div>
-    </AppShell>
+      </main>
+    </div>
   )
 }

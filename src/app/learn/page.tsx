@@ -5,10 +5,12 @@ import { AppShell } from "@/components/layout/AppShell"
 import { sampleModules } from "@/data/modules"
 import { ModuleList } from "@/components/ModuleList"
 
+export const revalidate = 60
+
 export default async function LearnPage() {
   const session = await getServerSession(authOptions)
 
-  let modules = await db.module.findMany({ where: { published: true }, orderBy: { order: "asc" } })
+  let modules = await db.module.findMany({ where: { published: true, enabled: true }, orderBy: { order: "asc" } })
 
   let completedIds: string[] = []
 
@@ -30,14 +32,14 @@ export default async function LearnPage() {
         completed: completedIds.includes(m.id),
         relevant: true,
       }))
-    : sampleModules.map((m) => ({
+    : sampleModules.filter((m) => m.enabled).map((m) => ({
         id: m.slug,
         slug: m.slug,
         title: m.title,
         summary: m.summary,
         difficulty: m.difficulty,
         roles: [...m.roles] as string[],
-        completed: false,
+        completed: completedIds.includes(m.slug),
         relevant: true,
       }))).sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty])
 
@@ -52,10 +54,10 @@ export default async function LearnPage() {
           className="m-0 font-normal"
           style={{ fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814" }}
         >
-          The {displayModules.length} modules.
+          Read the material.
         </h1>
         <p className="mt-6 mb-0 max-w-2xl" style={{ fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-          Text-first. Read what&apos;s relevant; skip what isn&apos;t. Modules don&apos;t gate each other.
+          Self-contained modules covering key AI concepts. Read in order or jump to what&apos;s relevant for your role.
         </p>
       </div>
 

@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { sampleScenarios } from "@/data/scenarios"
 import { isScenarioFree } from "@/config/access"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { calculateLevel, getLevelLabel } from "@/lib/utils"
 import { z } from "zod"
 
 type ScenarioFeedback = {
@@ -95,7 +96,15 @@ export async function POST(
     score: 5,
   }
 
+  let leveledUp = false
+  let newLevel = 1
+  let levelName = "Aware"
+
   if (session?.user?.id && dbScenario) {
+    const oldProg = await db.progress.findUnique({ where: { userId: session.user.id } })
+    const oldLevel = calculateLevel(oldProg?.totalPoints ?? 0)
+    let newPoints = oldProg?.totalPoints ?? 0
+
     await db.$transaction(async (tx: any) => {
       await tx.scenarioAttempt.create({
         data: {
@@ -113,17 +122,23 @@ export async function POST(
         await tx.progress.create({
           data: { userId: session.user.id, completedScenarios: [dbScenario.id], totalPoints: 50 },
         })
+        newPoints = 50
       } else if (!prog.completedScenarios.includes(dbScenario.id)) {
-        await tx.progress.update({
+        const updated = await tx.progress.update({
           where: { userId: session.user.id },
           data: { completedScenarios: { push: dbScenario.id }, totalPoints: { increment: 50 } },
         })
+        newPoints = updated.totalPoints
       }
     })
+
+    newLevel = calculateLevel(newPoints)
+    levelName = getLevelLabel(newLevel)
+    leveledUp = newLevel > oldLevel
   }
 
   const rubric = (scenarioData as any).rubric ?? []
-  return NextResponse.json({ feedback, rubric, attemptId: session?.user?.id && dbScenario ? "pending" : null })
+  return NextResponse.json({ feedback, rubric, leveledUp, newLevel, levelName })
 }
 
 export async function PATCH(

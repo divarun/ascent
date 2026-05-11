@@ -150,7 +150,7 @@ OpenAI, Google (Vertex AI), and Anthropic offer fine-tuning APIs for their model
 Current provider fine-tuning support (verify current state — this changes):
 - **OpenAI:** GPT-4o mini and GPT-3.5-Turbo fine-tuning available. Per-token training cost + higher inference cost for fine-tuned models.
 - **Google Vertex AI:** Gemini fine-tuning available. Regional deployment options.
-- **Anthropic:** Fine-tuning not currently available via standard API; available through enterprise agreements for specific use cases.
+- **Anthropic:** Claude 3 Haiku fine-tuning is generally available through Amazon Bedrock (US West region). Fine-tuning is not available through Anthropic's direct API; it requires using the Amazon Bedrock platform.
 
 **Self-managed fine-tuning:**
 Use open-weight models (Llama, Mistral, Qwen) with tools like Hugging Face TRL, Axolotl, or LLaMA-Factory. Full control over training process, data, and deployment. Requires GPU access and ML infrastructure expertise.

@@ -2,7 +2,7 @@ export const whatAiIsBadAt = {
   slug: "what-ai-is-bad-at",
   title: "What AI Is Bad At",
   summary:
-    "Hallucinations, brittleness, sycophancy, reasoning failures, hidden costs, and weak reliability guarantees — the failure modes every practitioner needs to internalize.",
+    "Hallucinations, brittleness, sycophancy, reasoning failures, hidden costs, agentic compounding errors, and weak reliability guarantees — the failure modes every practitioner needs to internalize.",
   difficulty: "BEGINNER" as const,
   roles: ["PM", "EM", "IC"] as const,
   tags: ["foundations", "reliability", "risk"],
@@ -29,8 +29,11 @@ LLMs generate plausible-sounding text. When they don't know the answer, they don
 - Specific numbers, dates, and statistics — models interpolate rather than recall precisely
 - Complex multi-step reasoning — each step adds error probability
 - Questions with a definitive answer that wasn't well-represented in training data
+- Domain-specific tasks like legal and medical queries, where hallucination rates can exceed 60–75% without grounding
 
-**The calibration problem:** A well-calibrated system would express uncertainty when it's uncertain. Most LLMs are overconfident — they express certainty on claims they get wrong 20–30% of the time. You cannot rely on the model to tell you when not to trust it.
+**Are reasoning models better?** Partially — and in ways that depend heavily on the task. Reasoning models reduce hallucination on structured, logic-intensive tasks by working through steps explicitly before committing to an answer. However, research shows they can hallucinate *more* on tasks involving faithful summarization or source-grounded extraction, where extended reasoning can introduce elaborations not in the source material. The improvement is task-dependent. Enable reasoning for analysis and complex logic; default to standard models with grounding (RAG) for source-faithful tasks.
+
+**The calibration problem:** A well-calibrated system would express uncertainty when it's uncertain. Most LLMs are overconfident — they express certainty on claims they get wrong at significant rates. You cannot rely on the model to tell you when not to trust it.
 
 **The diagnostic test:** Ask a model a specific question you know the answer to that it's likely to get wrong — an obscure fact, a recent event, a specific statistic. Observe what it does with uncertainty. If it answers confidently without hedging, calibrate your trust accordingly for similar questions in your application.
 
@@ -43,16 +46,18 @@ Sycophancy is a distinct failure mode from hallucination and more insidious in s
 - A model validates a flawed plan because the user expressed enthusiasm for it
 - A model adjusts its assessments based on perceived user identity — rating the same essay higher when told it was written by an expert
 
+**A note on reasoning models:** Reasoning models don't eliminate sycophancy — they change the form it takes. The extended reasoning process can sometimes act as a check on immediate agreement, forcing the model to work through implications before conceding. But reasoning models can equally use that same capability for post-hoc rationalization, constructing plausible-sounding justifications that accommodate a user's mistaken beliefs rather than correcting them. When deploying reasoning models in contexts where users can push back, test for this explicitly.
+
 **Why it matters for product design:** Any AI feature where users can push back on outputs — and expect agreement — is at risk of sycophantic failure. Customer-facing chatbots, AI tutors, code reviewers, and writing assistants are all in this category. An AI that agrees with everything a user says is not providing value — it's providing social validation that looks like value.
 
 **Mitigation:** Prompt the model explicitly to maintain accurate assessments when challenged: "Base your answer on evidence and reasoning. Do not change your position simply because the user disagrees. If challenged, explain your reasoning." This helps but doesn't fully eliminate sycophancy.
 
 ### Reasoning Limitations
 
-LLMs are not reasoning engines in the formal sense. They pattern-match against training data that includes reasoning examples, which produces outputs that look like reasoning. This distinction matters.
+LLMs are not reasoning engines in the formal sense. They pattern-match against training data that includes reasoning examples, which produces outputs that look like reasoning. This distinction matters even for reasoning models, which improve reliability substantially on structured tasks but do not provide formal reasoning guarantees.
 
 **Formal logic and mathematics:**
-Models make arithmetic errors, especially on multi-digit numbers and multi-step calculations. They fail on formal logical problems that require systematic symbol manipulation. They can appear to solve problems by pattern-matching against similar problems in training rather than actually computing the answer. For any feature that requires precise calculation, use code execution or a calculator — not an LLM.
+Models make arithmetic errors, especially on multi-digit numbers and multi-step calculations. They fail on formal logical problems that require systematic symbol manipulation. They can appear to solve problems by pattern-matching against similar problems in training rather than actually computing the answer. For any feature that requires precise calculation, use code execution or a calculator — not an LLM, and not even a reasoning model.
 
 **Spatial and physical reasoning:**
 Models have limited understanding of physical space, object relationships, and physical causality. Problems that are trivial for a human ("if I move this box, what falls?") can defeat a model. Anything involving physical world simulation is unreliable.
@@ -78,7 +83,7 @@ AI models work well on inputs similar to training data. They fail unpredictably 
 
 **The cliff problem:** Performance often degrades sharply rather than gradually at distribution edges. A model handling 98% of inputs well may fail completely on the remaining 2% rather than degrading gracefully. You won't see this in average performance metrics — you see it in your worst-case user experience.
 
-**Prompt sensitivity:** Small changes to a prompt — a word, a sentence order, a punctuation mark — can produce significantly different outputs. This is the prompt equivalent of brittleness. A prompt that works on your test inputs may fail differently when deployed against the full range of production inputs.
+**Prompt sensitivity:** Small changes to a prompt — a word, a sentence order, a punctuation mark — can produce significantly different outputs. A prompt that works on your test inputs may fail differently when deployed against the full range of production inputs.
 
 **Implications for testing:** Eval sets built from easy, representative cases miss the brittleness problem. Test deliberately on: adversarial inputs, unusual phrasings, inputs at length extremes, inputs in languages other than English, inputs that combine edge cases. If you haven't tested an input type, assume the model may fail unexpectedly on it.
 
@@ -98,13 +103,29 @@ Lower temperature (closer to 0) produces more consistent outputs. Structured out
 
 ### Context Limitations and Attention Degradation
 
-Every model has a maximum context window — a hard limit on how much text it can process at once. Beyond that limit, content is truncated. Within that limit, quality degrades in non-obvious ways.
+Every model has a maximum context window — a hard limit on how much text it can process at once. Within that limit, quality degrades in non-obvious ways.
 
-**The "lost in the middle" problem:** Models attend less reliably to information placed in the middle of long contexts than to information at the beginning or end. A 100,000-token context window doesn't mean the model processes all 100,000 tokens equally. A fact buried on page 30 of a 60-page document may be missed even if the document fits in context.
+**Advertised context ≠ effective context:** Flagship models in 2026 advertise context windows between 128,000 and 2 million tokens. But benchmarks consistently show that reliable recall and reasoning often cover only a portion of that range. The "lost in the middle" problem persists: models attend less reliably to information placed in the middle of long contexts than to information at the beginning or end. A fact buried on page 30 of a 60-page document may be missed even if the document fits in context. Don't trust the spec sheet — benchmark your specific use case at your target context length.
 
 **Context contamination:** Early errors in a conversation or reasoning chain propagate forward. A wrong conclusion reached in turn 3 of a conversation becomes part of the context for turns 4, 5, and 6. The model conditions on its own prior outputs — incorrect outputs are harder to correct as context accumulates.
 
 **Knowledge cutoff:** Models only know what was in their training data, which has a cutoff date. For recent events, recent product versions, recent legal changes, or any rapidly evolving domain, models may have outdated information — and present it confidently without acknowledging it's outdated. Always verify time-sensitive factual claims from an LLM through current sources.
+
+### Agentic Systems: Compounding Failure
+
+When LLMs are used as autonomous agents — executing multi-step tasks, calling external tools, operating in loops — every individual failure mode compounds across steps. This is one of the most significant reliability challenges in production AI today.
+
+**The math of compounding errors:** A model that performs a single step correctly 95% of the time looks reliable. In a 10-step agentic workflow where each step depends on the last, the probability of completing the full task without any error drops to roughly 60%. At 20 steps, it falls to 36%. Multi-agent systems — where multiple models hand off to each other — multiply these failure surfaces further.
+
+**Trajectory collapse:** In agentic systems, a minor early error can cascade into a completely failed outcome despite continued linguistic fluency. The agent may sound coherent and on-task while actually pursuing an incorrect goal established three steps earlier. Traditional output monitoring that evaluates final responses doesn't catch this — by the time the failure is visible, it's the product of earlier mistakes that are no longer in view.
+
+**Specific agentic failure modes to design against:**
+- **Goal drift:** The agent's internal representation of the task drifts from the user's original intent over a long session
+- **Tool misuse:** The agent calls APIs with hallucinated parameters or misinterprets tool outputs, silently corrupting downstream steps
+- **Context rot:** In long agentic sessions, the context window fills with stale prior turns; without compression or summarization, signal degrades and earlier context is less reliable
+- **Overconfidence in intermediate outputs:** Agents that don't flag uncertainty on intermediate steps pass errors forward as if they were facts
+
+**What this means for teams building agentic features:** Evaluation must cover trajectories, not just final outputs. A benchmark that tests only whether the final answer is correct misses errors that entered and resolved midway, and errors that look locally coherent but produced a wrong path. Production telemetry should trace every tool call and intermediate step. Human-in-the-loop checkpoints at high-stakes decision points significantly improve reliability in multi-step workflows.
 
 ### Calibration Failure
 
@@ -130,9 +151,11 @@ Models produce verbose outputs by default and rate verbose outputs as higher qua
 
 AI looks cheap in prototypes. At scale, hidden costs compound.
 
-**Latency in production:** LLM latency has heavy tails. P50 latency might be 1–2 seconds; P99 can be 10–30 seconds. A feature that feels snappy in testing feels broken in production when users hit the P99 case. Streaming helps perceived performance but doesn't change actual generation time.
+**Per-token prices vs. per-task costs:** API token prices have dropped dramatically — GPT-4-level performance costs a fraction of what it did in 2023. But for agentic workflows that make 50–200 LLM calls per task, a cheap per-token rate becomes an expensive per-task cost. Context also grows across a session: by turn 30 of an agentic loop, input tokens per call can be 5–10x what they were at turn 1, because earlier conversation turns accumulate in the context. Model the full per-task cost, not just the per-token cost.
 
-**Failure rates and retry costs:** Models time out, return malformed outputs, hit rate limits, and produce outputs that fail validation. Each failure requires retry logic, fallback behavior, and operational monitoring. Teams that don't design for this ship features that silently fail.
+**Latency in production:** LLM latency has heavy tails. P50 latency might be 1–2 seconds; P99 can be 10–30 seconds for standard models and significantly longer for reasoning models on complex tasks. A feature that feels snappy in testing feels broken in production when users hit the P99 case. Streaming helps perceived performance but doesn't change actual generation time.
+
+**Failure rates and retry costs:** Production telemetry from 2026 deployments shows that roughly 5% of LLM call spans fail outright in live environments. Models time out, return malformed outputs, hit rate limits, and produce outputs that fail validation. Each failure requires retry logic, fallback behavior, and operational monitoring. Teams that don't design for this ship features that silently fail.
 
 **Review overhead:** Any AI feature that requires human review — and many should — creates a new operational function. Who does the review? What's their throughput? What's the SLA? At 10,000 outputs per day with a 5% review rate, that's 500 reviews per day. Budget for this before committing to the architecture.
 
@@ -178,7 +201,7 @@ Creative generation, brainstorming, early-stage exploration. First drafts. Sugge
         "Brittleness — the follow-up question is outside the model's training distribution",
       ],
       correct: 1,
-      explanation: "Sycophancy is a distinct failure mode from hallucination. Models trained with human feedback learn that agreeable responses get rated positively — so when a user pushes back, the model may change a correct answer to match the user's apparent preference. This is especially problematic in chatbots and code reviewers where users can push back.",
+      explanation: "Sycophancy is a distinct failure mode from hallucination. Models trained with human feedback learn that agreeable responses get rated positively — so when a user pushes back, the model may change a correct answer to match the user's apparent preference. Notably, reasoning models don't eliminate this: they can construct plausible-sounding post-hoc justifications for sycophantic conclusions rather than simply capitulating, which can make the failure harder to detect.",
     },
     {
       question: "Your team is using an LLM to calculate shipping costs across complex pricing tiers. You notice occasional arithmetic errors. What is the correct fix?",
@@ -188,7 +211,17 @@ Creative generation, brainstorming, early-stage exploration. First drafts. Sugge
         "Increase the model's context window so it can hold all pricing tier data in memory simultaneously",
       ],
       correct: 1,
-      explanation: "LLMs are unreliable at precise arithmetic because they pattern-match on training data rather than compute. The correct approach is to use the LLM for what it's good at — understanding rules, structuring problems — and route any precise calculation to a code interpreter or calculator.",
+      explanation: "LLMs — including reasoning models — are unreliable at precise arithmetic because they pattern-match on training data rather than compute. Reasoning models improve multi-step logic significantly but do not provide formal computation guarantees. The correct approach is to use the LLM for what it's good at — understanding rules, structuring problems — and route precise calculations to a code interpreter or calculator.",
+    },
+    {
+      question: "Your team builds an agentic workflow that completes 10 sequential steps, with each step depending on the last. Each individual step succeeds 95% of the time. What is the approximate probability of completing the full workflow without any error?",
+      options: [
+        "Around 95%, because the per-step reliability applies to the overall task",
+        "Around 60%, because per-step error rates compound across sequential steps",
+        "Around 50%, because agentic systems introduce additional coordination overhead that halves reliability",
+      ],
+      correct: 1,
+      explanation: "Error rates compound in sequential workflows. A 95% per-step success rate across 10 dependent steps yields roughly 0.95^10 ≈ 60% end-to-end success. At 20 steps, that falls to about 36%. This is why agentic reliability requires evaluation of full trajectories, not just individual steps — and why intermediate checkpoints, error recovery logic, and human-in-the-loop gates matter for multi-step deployments.",
     },
   ],
 }

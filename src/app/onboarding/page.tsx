@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -13,53 +14,14 @@ const C = {
 }
 
 const STEPS = [
-  { id: "role", label: "Your role" },
-  { id: "context", label: "Context" },
-  { id: "ai", label: "AI experience" },
-  { id: "goals", label: "Goals" },
+  { id: "role",  label: "Your role" },
+  { id: "setup", label: "Your setup" },
 ]
 
 const ROLES = [
-  { value: "PM", label: "Product Manager", desc: "Own product decisions and roadmap" },
-  { value: "EM", label: "Engineering Manager", desc: "Lead engineering teams and delivery" },
+  { value: "PM", label: "Product Manager",     desc: "Own product decisions and roadmap" },
+  { value: "EM", label: "Engineering Manager",  desc: "Lead engineering teams and delivery" },
   { value: "IC", label: "Individual Contributor", desc: "Apply AI tools in your day-to-day work" },
-  { value: "OTHER", label: "Other", desc: "Founder, consultant, executive, or other" },
-]
-
-const COMPANY_STAGES = [
-  "Seed / Early stage",
-  "Series A–B",
-  "Series C+",
-  "Public company",
-  "Enterprise (1000+)",
-]
-
-const INDUSTRIES = [
-  "SaaS / B2B Software",
-  "Consumer / B2C Tech",
-  "Fintech / Banking",
-  "Healthcare / Medtech",
-  "Biotech / Life Sciences",
-  "E-commerce / Retail",
-  "Marketplace",
-  "Cybersecurity",
-  "Education / Edtech",
-  "Real Estate / Proptech",
-  "HR / Recruiting",
-  "Marketing / Adtech",
-  "Media / Publishing",
-  "Gaming",
-  "Telecommunications",
-  "Manufacturing / Industrial",
-  "Logistics / Supply Chain",
-  "Energy / Climate Tech",
-  "Legal / Legaltech",
-  "Travel / Hospitality",
-  "Food / Beverage",
-  "Professional Services",
-  "Nonprofit",
-  "Government / Public Sector",
-  "Other",
 ]
 
 const AI_FAMILIARITY = [
@@ -70,23 +32,25 @@ const AI_FAMILIARITY = [
 ]
 
 const CHALLENGES = [
-  { value: "understanding-ai",       label: "Understanding what AI can actually do" },
-  { value: "evaluating-tools",       label: "Evaluating and selecting AI tools" },
-  { value: "implementing-workflows", label: "Integrating AI into team workflows" },
-  { value: "leading-ai-initiatives", label: "Leading AI initiatives at work" },
-  { value: "measuring-roi",          label: "Measuring AI ROI and impact" },
-  { value: "team-adoption",          label: "Getting team buy-in and adoption" },
+  { value: "understanding-ai",        label: "Understanding what AI can actually do" },
+  { value: "evaluating-tools",        label: "Evaluating and selecting AI tools" },
+  { value: "implementing-workflows",  label: "Integrating AI into team workflows" },
+  { value: "leading-ai-initiatives",  label: "Leading AI initiatives at work" },
+  { value: "measuring-roi",           label: "Measuring AI ROI and impact" },
+  { value: "team-adoption",           label: "Getting team buy-in and adoption" },
+  { value: "applying-ai-daily",       label: "Applying AI tools in my day-to-day work" },
+  { value: "keeping-up",              label: "Keeping up with the pace of AI change" },
 ]
 
 const GOALS = [
-  { value: "make-better-decisions",  label: "Make better AI-related decisions" },
-  { value: "evaluate-vendors",       label: "Evaluate AI vendors and tools effectively" },
-  { value: "implement-ai",           label: "Successfully implement AI on my team" },
-  { value: "lead-initiative",        label: "Lead a company-wide AI initiative" },
-  { value: "build-roadmap",          label: "Build an AI-informed product roadmap" },
-  { value: "understand-fundamentals",label: "Understand AI/ML fundamentals" },
-  { value: "boost-productivity",     label: "Use AI to be more productive in my work" },
-  { value: "informed-contributor",   label: "Have informed opinions about AI at my company" },
+  { value: "make-better-decisions",   label: "Make better AI-related decisions" },
+  { value: "evaluate-vendors",        label: "Evaluate AI vendors and tools effectively" },
+  { value: "implement-ai",            label: "Successfully implement AI on my team" },
+  { value: "lead-initiative",         label: "Lead a company-wide AI initiative" },
+  { value: "build-roadmap",           label: "Build an AI-informed product roadmap" },
+  { value: "understand-fundamentals", label: "Understand AI/ML fundamentals" },
+  { value: "boost-productivity",      label: "Use AI to be more productive in my work" },
+  { value: "informed-contributor",    label: "Have informed opinions about AI at my company" },
 ]
 
 function AscentMark() {
@@ -140,31 +104,56 @@ function optionButton(selected: boolean): React.CSSProperties {
   }
 }
 
+function Checkbox({ checked }: { checked: boolean }) {
+  return (
+    <div style={{
+      width: 14, height: 14, flexShrink: 0,
+      border: `1.5px solid ${checked ? C.ink : C.line}`,
+      background: checked ? C.ink : "transparent",
+      borderRadius: 2,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      transition: "all 120ms",
+    }}>
+      {checked && (
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5l2.5 2.5L8 3" stroke={C.panel} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </div>
+  )
+}
+
+function RadioDot({ checked }: { checked: boolean }) {
+  return (
+    <div style={{
+      width: 14, height: 14, flexShrink: 0,
+      border: `1.5px solid ${checked ? C.ink : C.line}`,
+      background: checked ? C.ink : "transparent",
+      borderRadius: 7,
+      transition: "all 120ms",
+    }} />
+  )
+}
+
 export default function OnboardingPage() {
   const router = useRouter()
+  const { status } = useSession()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/login")
+  }, [status, router])
   const [error, setError] = useState("")
   const [form, setForm] = useState({
     role: "",
-    companyStage: "",
-    industry: "",
     aiFamiliarity: "",
-    biggestChallenges: [] as string[],
+    biggestChallenge: "",
     goals: [] as string[],
   })
 
-  function update(key: string, value: string | string[]) {
+  function update(key: string, value: string) {
     setForm((f) => ({ ...f, [key]: value }))
-  }
-
-  function toggleChallenge(value: string) {
-    setForm((f) => ({
-      ...f,
-      biggestChallenges: f.biggestChallenges.includes(value)
-        ? f.biggestChallenges.filter((c) => c !== value)
-        : [...f.biggestChallenges, value],
-    }))
   }
 
   function toggleGoal(value: string) {
@@ -178,9 +167,7 @@ export default function OnboardingPage() {
 
   function canAdvance() {
     if (step === 0) return !!form.role
-    if (step === 1) return !!form.companyStage && !!form.industry
-    if (step === 2) return !!form.aiFamiliarity && form.biggestChallenges.length > 0
-    if (step === 3) return form.goals.length > 0
+    if (step === 1) return !!form.aiFamiliarity && !!form.biggestChallenge && form.goals.length > 0
     return true
   }
 
@@ -207,6 +194,8 @@ export default function OnboardingPage() {
 
   const isLast = step === STEPS.length - 1
 
+  if (status === "loading" || status === "unauthenticated") return null
+
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.ink, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 520 }}>
@@ -217,50 +206,29 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step progress */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 32 }}>
           {STEPS.map((s, i) => (
-            <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-              <div style={{
-                width: 24,
-                height: 24,
-                borderRadius: 4,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: i <= step ? C.ink : "transparent",
-                border: `1px solid ${i <= step ? C.ink : C.line}`,
-                fontFamily: '"JetBrains Mono", monospace',
-                fontSize: 11,
-                color: i <= step ? C.panel : C.sub,
-                flexShrink: 0,
-                transition: "background 120ms, border-color 120ms",
-              }}>
-                {i < step ? "✓" : i + 1}
-              </div>
-              {i < STEPS.length - 1 && (
-                <div style={{ height: 1, flex: 1, background: i < step ? C.ink : C.line, transition: "background 120ms" }} />
-              )}
-            </div>
+            <div key={s.id} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= step ? C.ink : C.line, transition: "background 200ms" }} />
           ))}
         </div>
 
         {/* Card */}
-        <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 4, padding: 32 }}>
+        <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 8, padding: "32px 32px 28px" }}>
 
           {/* Step 0: Role */}
           {step === 0 && (
             <div>
               <div style={kicker}>
                 <span style={{ width: 16, height: 1, background: C.sub, display: "inline-block" }} />
-                Step 1 of 4
+                Step 1 of 2
               </div>
-              <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 500, color: C.ink }}>What&apos;s your role?</h2>
+              <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 500, color: C.ink }}>What&rsquo;s your role?</h2>
               <p style={{ margin: "0 0 24px", fontSize: 14, lineHeight: 1.6, color: C.sub }}>
-                Ascent tailors content and simulations to your specific challenges.
+                This personalises your learning path.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {ROLES.map((r) => (
-                  <button key={r.value} onClick={() => update("role", r.value)} style={{ ...optionButton(form.role === r.value), padding: "14px 16px" }}>
+                  <button key={r.value} onClick={() => update("role", r.value)} style={{ ...optionButton(form.role === r.value), padding: "12px 16px" }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{r.label}</div>
                     <div style={{ fontSize: 12.5, color: C.sub, marginTop: 2 }}>{r.desc}</div>
                   </button>
@@ -269,144 +237,63 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 1: Context */}
+          {/* Step 1: AI experience + Challenge + Goals */}
           {step === 1 && (
             <div>
               <div style={kicker}>
                 <span style={{ width: 16, height: 1, background: C.sub, display: "inline-block" }} />
-                Step 2 of 4
+                Step 2 of 2
               </div>
-              <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 500, color: C.ink }}>About your company</h2>
-              <p style={{ margin: "0 0 24px", fontSize: 14, lineHeight: 1.6, color: C.sub }}>
-                This helps us recommend the most relevant scenarios.
-              </p>
-
-              <div style={{ marginBottom: 20 }}>
-                <div style={fieldLabel}>Company stage</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {COMPANY_STAGES.map((s) => (
-                    <button key={s} onClick={() => update("companyStage", s)} style={optionButton(form.companyStage === s)}>{s}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div style={fieldLabel}>Industry</div>
-                <div style={{ maxHeight: 280, overflowY: "auto", paddingRight: 4 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                    {INDUSTRIES.map((ind) => (
-                      <button key={ind} onClick={() => update("industry", ind)} style={{ ...optionButton(form.industry === ind), fontSize: 12.5 }}>{ind}</button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: AI Experience */}
-          {step === 2 && (
-            <div>
-              <div style={kicker}>
-                <span style={{ width: 16, height: 1, background: C.sub, display: "inline-block" }} />
-                Step 3 of 4
-              </div>
-              <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 500, color: C.ink }}>Your AI experience</h2>
+              <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 500, color: C.ink }}>A few quick questions</h2>
               <p style={{ margin: "0 0 24px", fontSize: 14, lineHeight: 1.6, color: C.sub }}>
                 Honest answers lead to better recommendations.
               </p>
 
-              <div style={{ marginBottom: 20 }}>
+              {/* AI familiarity */}
+              <div style={{ marginBottom: 24 }}>
                 <div style={fieldLabel}>AI familiarity</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {AI_FAMILIARITY.map((f) => (
-                    <button key={f.value} onClick={() => update("aiFamiliarity", f.value)} style={{ ...optionButton(form.aiFamiliarity === f.value), padding: "12px 16px" }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: C.ink }}>{f.label}</div>
-                      <div style={{ fontSize: 12.5, color: C.sub, marginTop: 2 }}>{f.desc}</div>
+                    <button key={f.value} onClick={() => update("aiFamiliarity", f.value)} style={{ ...optionButton(form.aiFamiliarity === f.value), padding: "11px 14px" }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 500, color: C.ink }}>{f.label}</div>
+                      <div style={{ fontSize: 12, color: C.sub, marginTop: 1 }}>{f.desc}</div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div>
-                <div style={fieldLabel}>Biggest AI challenges — select all that apply</div>
+              {/* Biggest challenge */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={fieldLabel}>Biggest AI challenge</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {CHALLENGES.map((c) => {
-                    const selected = form.biggestChallenges.includes(c.value)
-                    return (
-                      <button
-                        key={c.value}
-                        onClick={() => toggleChallenge(c.value)}
-                        style={{ ...optionButton(selected), display: "flex", alignItems: "center", gap: 12 }}
-                      >
-                        <div style={{
-                          width: 14,
-                          height: 14,
-                          border: `1.5px solid ${selected ? C.ink : C.line}`,
-                          background: selected ? C.ink : "transparent",
-                          borderRadius: 2,
-                          flexShrink: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "all 120ms",
-                        }}>
-                          {selected && (
-                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                              <path d="M2 5l2.5 2.5L8 3" stroke={C.panel} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </div>
-                        {c.label}
-                      </button>
-                    )
-                  })}
+                  {CHALLENGES.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => update("biggestChallenge", c.value)}
+                      style={{ ...optionButton(form.biggestChallenge === c.value), display: "flex", alignItems: "center", gap: 12 }}
+                    >
+                      <RadioDot checked={form.biggestChallenge === c.value} />
+                      {c.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Step 3: Goals */}
-          {step === 3 && (
-            <div>
-              <div style={kicker}>
-                <span style={{ width: 16, height: 1, background: C.sub, display: "inline-block" }} />
-                Step 4 of 4
-              </div>
-              <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 500, color: C.ink }}>What do you want to achieve?</h2>
-              <p style={{ margin: "0 0 24px", fontSize: 14, lineHeight: 1.6, color: C.sub }}>
-                Select all that apply.
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {GOALS.map((g) => {
-                  const selected = form.goals.includes(g.value)
-                  return (
+              {/* Goals */}
+              <div>
+                <div style={fieldLabel}>Goals — select all that apply</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {GOALS.map((g) => (
                     <button
                       key={g.value}
                       onClick={() => toggleGoal(g.value)}
-                      style={{ ...optionButton(selected), display: "flex", alignItems: "center", gap: 12 }}
+                      style={{ ...optionButton(form.goals.includes(g.value)), display: "flex", alignItems: "center", gap: 12 }}
                     >
-                      <div style={{
-                        width: 14,
-                        height: 14,
-                        border: `1.5px solid ${selected ? C.ink : C.line}`,
-                        background: selected ? C.ink : "transparent",
-                        borderRadius: 2,
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 120ms",
-                      }}>
-                        {selected && (
-                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 5l2.5 2.5L8 3" stroke={C.panel} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </div>
+                      <Checkbox checked={form.goals.includes(g.value)} />
                       {g.label}
                     </button>
-                  )
-                })}
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -417,23 +304,13 @@ export default function OnboardingPage() {
         )}
 
         {/* Navigation */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
           <button
             onClick={() => setStep((s) => s - 1)}
-            disabled={step === 0}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13.5,
-              color: C.sub,
-              background: "transparent",
-              border: "none",
-              cursor: step === 0 ? "default" : "pointer",
-              fontFamily: "inherit",
-              opacity: step === 0 ? 0 : 1,
-              transition: "opacity 120ms",
-              padding: 0,
+              background: "none", border: "none", cursor: step === 0 ? "default" : "pointer",
+              fontSize: 13.5, color: C.sub, fontFamily: "inherit",
+              opacity: step === 0 ? 0 : 1, transition: "opacity 120ms", padding: 0,
             }}
           >
             ← Back
@@ -444,20 +321,11 @@ export default function OnboardingPage() {
               onClick={() => setStep((s) => s + 1)}
               disabled={!canAdvance()}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "11px 18px",
-                background: C.ink,
-                color: C.panel,
-                borderRadius: 4,
-                fontSize: 13.5,
-                fontWeight: 500,
-                border: "none",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "11px 18px", background: C.ink, color: C.panel,
+                borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "none",
                 cursor: canAdvance() ? "pointer" : "not-allowed",
-                opacity: canAdvance() ? 1 : 0.4,
-                fontFamily: "inherit",
-                transition: "opacity 120ms",
+                opacity: canAdvance() ? 1 : 0.4, fontFamily: "inherit", transition: "opacity 120ms",
               }}
             >
               Continue →
@@ -467,20 +335,11 @@ export default function OnboardingPage() {
               onClick={handleFinish}
               disabled={!canAdvance() || loading}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "11px 18px",
-                background: C.ink,
-                color: C.panel,
-                borderRadius: 4,
-                fontSize: 13.5,
-                fontWeight: 500,
-                border: "none",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "11px 18px", background: C.ink, color: C.panel,
+                borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "none",
                 cursor: canAdvance() && !loading ? "pointer" : "not-allowed",
-                opacity: canAdvance() && !loading ? 1 : 0.4,
-                fontFamily: "inherit",
-                transition: "opacity 120ms",
+                opacity: canAdvance() && !loading ? 1 : 0.4, fontFamily: "inherit", transition: "opacity 120ms",
               }}
             >
               {loading && <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} />}

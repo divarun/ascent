@@ -8,6 +8,7 @@ export function rateLimit(key: string, limit: number, windowMs: number): boolean
   const entry = store.get(key)
 
   if (!entry || entry.reset < now) {
+    store.delete(key)
     store.set(key, { count: 1, reset: now + windowMs })
     return true
   }

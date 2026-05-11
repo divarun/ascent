@@ -9,6 +9,7 @@ import Link from "next/link"
 import { isScenarioFree } from "@/config/access"
 import { C } from "@/lib/colors"
 import { MonoLabel, Panel, BulletList } from "@/components/detail-layout"
+import { LevelUpBanner } from "@/components/LevelUpBanner"
 
 type Prompt = { id: string; question: string; followUp: string | null; modelAnswer?: string }
 type ScenarioData = { id: string; slug: string; title: string; summary: string; context: string; roles: string[]; difficulty: string; industry: string | null; prompts: Prompt[] }
@@ -52,6 +53,7 @@ export default function ScenarioPage() {
   const [rubric, setRubric] = useState<RubricCriterion[]>([])
   const [selfAssessment, setSelfAssessment] = useState<SelfAssessment | null>(null)
   const [savingAssessment, setSavingAssessment] = useState(false)
+  const [levelUp, setLevelUp] = useState<{ level: number; name: string } | null>(null)
 
   useEffect(() => {
     if (status === "loading") return
@@ -94,6 +96,7 @@ export default function ScenarioPage() {
       const data = await res.json()
       setFeedback(data.feedback)
       if (data.rubric) setRubric(data.rubric)
+      if (data.leveledUp) setLevelUp({ level: data.newLevel, name: data.levelName })
       setPhase("feedback")
       clearDraft(slug)
     } else {
@@ -271,8 +274,9 @@ export default function ScenarioPage() {
         {phase === "feedback" && feedback && (
           <div>
             <div style={{ marginBottom: 32 }}>
-              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: C.good }}>✓ SCENARIO COMPLETE</div>
+              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: C.good }}>✓ SCENARIO COMPLETE{session ? " — +50 PTS" : ""}</div>
               <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", color: C.sub, marginTop: 4 }}>EXPERT PERSPECTIVE — WHAT STRONG RESPONSES ADDRESS</div>
+              {levelUp && <LevelUpBanner level={levelUp.level} name={levelUp.name} />}
             </div>
 
             {/* Overall */}

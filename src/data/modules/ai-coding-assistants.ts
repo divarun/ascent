@@ -17,11 +17,13 @@ This module covers two things: what the tools are and how to evaluate them (EM f
 
 The category has fragmented into meaningfully different tools. Understanding how each works explains why they're good at different things — and why output quality is almost entirely determined by context quality.
 
-**Inline completion (Copilot, Codeium)**
+**Inline completion (Copilot, Tabnine)**
 
 These tools take the current file, your cursor position, and a window of surrounding context, then call an LLM to predict what comes next. The suggestion appears inline as ghost text. Accept it with Tab, ignore it by continuing to type.
 
 The model was trained on public code (primarily GitHub). It pattern-matches against what it's seen before. This is why it excels at common patterns in popular languages and struggles with proprietary APIs, internal frameworks, and novel architectures. It doesn't know your codebase unless you give it context.
+
+Note: GitHub Copilot has expanded well beyond inline completion — it now includes Agent Mode for multi-step autonomous tasks, multi-file editing, and GitHub-integrated PR workflows. The line between "completion tool" and "AI-first editor" has blurred significantly.
 
 **AI-first editors (Cursor, Windsurf)**
 
@@ -29,11 +31,13 @@ These are complete development environments built around an LLM. The key differe
 
 They also support multi-file edits in a single operation and natural language commands that modify code directly. The quality of output scales with the quality of context retrieval. A poorly indexed codebase produces worse results than a well-indexed one.
 
-**Agentic coding tools (Claude Code, Codex CLI, Devin)**
+Windsurf (formerly Codeium) has undergone significant ownership changes — OpenAI announced a $3B acquisition in 2025, but the deal collapsed and key Windsurf team members joined Google DeepMind via a licensing arrangement, while Windsurf continues operating as an independent company. Factor ownership uncertainty into long-term tooling decisions.
+
+**Agentic coding tools (Claude Code, Codex, Devin)**
 
 These tools are given a task and work toward it autonomously: reading files, writing code, running tests, interpreting output, and iterating. They operate in a loop rather than responding to individual prompts.
 
-Claude Code and Codex run in a terminal and are developer-supervised — you see what they're doing and can intervene. Devin and similar tools aim for more autonomous operation with less developer involvement.
+Claude Code runs in a terminal and is developer-supervised — you see what they're doing and can intervene. Codex (OpenAI) has expanded from a CLI tool into a broader platform with a desktop app, cloud environments for parallel tasks, IDE extensions, and automated workflows that can run unprompted. Devin and similar tools aim for more autonomous operation with less developer involvement.
 
 The honest current state: agentic tools work well for isolated, well-specified tasks (add this endpoint, write tests for this module, fix this failing test). They degrade on tasks with vague scope, deep codebase dependencies, or requirements that need product judgment. They are not reliable for end-to-end feature development without significant human oversight.
 
@@ -41,12 +45,12 @@ The honest current state: agentic tools work well for isolated, well-specified t
 
 | Category | Examples | Best For | Watch Out For |
 |---|---|---|---|
-| Inline completion | Copilot, Codeium | Boilerplate, common patterns, low-friction adoption | Accepting suggestions without reading them |
+| Inline completion | Copilot (basic mode), Tabnine | Boilerplate, common patterns, low-friction adoption | Accepting suggestions without reading them |
 | AI-first editors | Cursor, Windsurf | Refactoring, multi-file changes, codebase-aware tasks | Retrieval quality varies; test before committing |
 | Agentic (supervised) | Claude Code, Codex CLI | Isolated tasks with clear specs, test writing, debugging | Scope creep; set explicit task boundaries |
-| Agentic (autonomous) | Devin | Highly specified, isolated tasks | Not reliable for complex features; verify all output |
+| Agentic (autonomous) | Devin | Highly specified, isolated tasks — migrations, test writing, vulnerability fixes | Not reliable for complex features; verify all output |
 
-Don't standardize on a single tool for all use cases. Many teams use inline completion for day-to-day work and agentic tools for specific high-value tasks.
+Don't standardize on a single tool for all use cases. Many teams use inline completion for day-to-day work and agentic tools for specific high-value tasks. A common pairing is Cursor for IDE work and Claude Code for terminal-driven tasks.
 
 ---
 
@@ -213,9 +217,9 @@ When AI-generated code fails, the instinct is to feed the error back immediately
 
 ### The Productivity Question
 
-Published studies report 10–55% productivity gains. These numbers are real but require interpretation.
+Published studies report productivity gains in the range of 10–55%, though a notable 2025 METR randomized controlled trial found developers estimated 20% gains but measured a 19% slowdown — a gap that makes workflow integration more consequential than tool selection alone.
 
-**What they measured:** Time-to-completion on isolated coding tasks. This captures what AI assistants are best at.
+**What typical studies measured:** Time-to-completion on isolated coding tasks. This captures what AI assistants are best at.
 
 **What they missed:** Integration work, debugging, code review, architecture decisions — a significant portion of senior engineering time. Productivity gains on pure coding tasks don't transfer linearly to overall team output.
 
@@ -234,7 +238,7 @@ Inline completion tools send code snippets to vendor servers for every suggestio
 Most enterprise tiers explicitly exclude your code from model training. Verify this contractually, not just in marketing copy. GitHub Copilot Business, Cursor Business, and most enterprise offerings include this. Free tiers often do not.
 
 **Self-hosted options:**
-For high-sensitivity environments: locally-hosted completions, self-hosted Codeium, GitHub Copilot Enterprise with private network options. Output quality is typically lower than cloud models.
+For high-sensitivity environments: locally-hosted completions, self-hosted options, GitHub Copilot Enterprise with private network options. Output quality is typically lower than cloud models.
 
 **Generated code and IP:**
 There's unresolved legal uncertainty around AI-generated code that closely mirrors training data. Some tools offer a "code duplication detection" filter. If this matters to your legal team, enable it.
@@ -268,7 +272,9 @@ Token costs are non-trivial at team scale and frequently surprise EMs.
 
 AI-first editors can consume significant API tokens per developer per day on large codebases. Agentic tools on long tasks can burn substantial costs in a single session. At 20 developers using an AI editor heavily, monthly costs can reach thousands of dollars on top of per-seat licensing.
 
-Understand the cost model before committing: per-seat flat fee vs. consumption-based vs. hybrid. Flat-fee tools are more predictable. Consumption-based tools need usage monitoring.`,
+Understand the cost model before committing: per-seat flat fee vs. consumption-based vs. hybrid. Flat-fee tools are more predictable. Consumption-based tools need usage monitoring.
+
+**Note on GitHub Copilot billing:** As of mid-2026, Copilot transitioned from flat monthly fees to usage-based billing (token consumption). This changes the cost calculus — light users may pay less, but heavy users could see significant increases. Verify current pricing before budgeting.`,
   quiz: [
     {
       question: "An AI coding assistant generates a function that calls a method that doesn't exist in the current library version. The code compiles but fails at runtime. Why does this happen?",

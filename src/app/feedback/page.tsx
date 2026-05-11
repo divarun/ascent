@@ -1,8 +1,22 @@
 "use client"
 
-import { useState } from "react"
-import { AppShell } from "@/components/layout/AppShell"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
+
+function AscentMark() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <svg width={18} height={18} viewBox="0 0 22 22" fill="none" aria-hidden>
+        <path d="M2 18 L8 7 L11 12 L14 4 L20 18 Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none" />
+        <line x1="2" y1="18.6" x2="20" y2="18.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+      <span style={{ fontFamily: '"Instrument Serif", serif', fontSize: 20, lineHeight: 1, letterSpacing: "-0.01em" }}>
+        Ascent
+      </span>
+    </div>
+  )
+}
 
 const PAINS = [
   "Scenarios feel too long",
@@ -12,11 +26,10 @@ const PAINS = [
   "Content too basic for my role",
   "Content too advanced for my role",
   "Missions don't fit my actual job",
-  "Onboarding asked too much / too little",
-  "Sign-up friction (even though it's free)",
-  "Don't see myself coming back daily",
+  "Onboarding felt too long / asked too much",
+  "Onboarding didn't give me enough context",
+  "Hard to build a habit around it",
   "Mobile experience is rough",
-  "Nothing — I just want to send notes",
 ]
 
 const SURFACES = ["Dashboard", "A specific module", "A specific scenario", "A mission", "Onboarding", "The whole thing", "Something else"]
@@ -37,9 +50,9 @@ function Kicker({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+function Section({ title, sub, children, id }: { title: string; sub?: string; children: React.ReactNode; id?: string }) {
   return (
-    <section style={{ paddingTop: 24, marginTop: 24, borderTop: "1px solid #DDDCD9" }}>
+    <section id={id} style={{ paddingTop: 24, marginTop: 24, borderTop: "1px solid #DDDCD9" }}>
       <h2 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: 26, lineHeight: 1.15, letterSpacing: "-0.01em", color: "#1A1814", fontWeight: 400 }}>{title}</h2>
       {sub && <p style={{ margin: "6px 0 18px", fontSize: 13.5, color: "#65605A" }}>{sub}</p>}
       {!sub && <div style={{ height: 18 }} />}
@@ -60,12 +73,22 @@ type FormData = {
 }
 
 export default function FeedbackPage() {
+  const { data: session } = useSession()
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [data, setData] = useState<FormData>({
     mood: "", pains: [], surface: "", stuck: "", missing: "", nps: null, contact: false, email: "",
   })
+
+  const sessionEmailApplied = useRef(false)
+  const sessionEmail = session?.user?.email
+  useEffect(() => {
+    if (sessionEmail && !sessionEmailApplied.current) {
+      sessionEmailApplied.current = true
+      setData(d => ({ ...d, email: d.email || sessionEmail, contact: true }))
+    }
+  }, [sessionEmail])
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -116,7 +139,13 @@ export default function FeedbackPage() {
 
   if (submitted) {
     return (
-      <AppShell>
+      <div className="min-h-screen bg-background">
+        <header style={{ borderBottom: "1px solid #DDDCD9", padding: "0 56px", height: 52, display: "flex", alignItems: "center" }}>
+          <Link href="/" style={{ color: "#1A1814", textDecoration: "none" }}>
+            <AscentMark />
+          </Link>
+        </header>
+        <main className="max-w-5xl mx-auto px-14 py-14 w-full">
         <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
           <Kicker>Feedback</Kicker>
           <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
@@ -144,20 +173,27 @@ export default function FeedbackPage() {
         <div style={{ marginTop: 48, padding: 24, border: "1px dashed #DDDCD9", maxWidth: 720, fontSize: 13.5, color: "#65605A", lineHeight: 1.6 }}>
           <strong style={{ color: "#1A1814" }}>What we do with this.</strong> Pain-point counts go on a board ranked by frequency. Free-text answers get tagged and re-surfaced when we plan the next sprint. We don&apos;t share contact emails with anyone.
         </div>
-      </AppShell>
+        </main>
+      </div>
     )
   }
 
   return (
-    <AppShell>
+    <div className="min-h-screen bg-background">
+      <header style={{ borderBottom: "1px solid #DDDCD9", padding: "0 56px", height: 52, display: "flex", alignItems: "center" }}>
+        <Link href="/" style={{ color: "#1A1814", textDecoration: "none" }}>
+          <AscentMark />
+        </Link>
+      </header>
+      <main className="max-w-5xl mx-auto px-14 py-14 w-full">
       {/* Page header */}
       <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
         <Kicker>Feedback</Kicker>
         <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
-          Tell us where this is breaking.
+          Tell us how we are doing.
         </h1>
         <p style={{ marginTop: 24, marginBottom: 0, maxWidth: 640, fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-          Your honest feedback helps us build a better product. We read everything.
+          Your honest feedback helps us build a better product.
         </p>
       </div>
 
@@ -202,6 +238,11 @@ export default function FeedbackPage() {
                 )
               })}
             </div>
+            <div style={{ marginTop: 14 }}>
+              <a href="#q04" style={{ fontSize: 13, color: "#65605A", textDecoration: "none", borderBottom: "1px solid #DDDCD9" }}>
+                Nothing blocked me — I just want to leave a note →
+              </a>
+            </div>
           </Section>
 
           {/* Surface */}
@@ -223,7 +264,7 @@ export default function FeedbackPage() {
           </Section>
 
           {/* Stuck */}
-          <Section title="04 — Where are you stuck?" sub="One sentence is fine. A paragraph is welcome.">
+          <Section id="q04" title="04 — Where are you stuck?" sub="One sentence is fine. A paragraph is welcome.">
             <textarea
               rows={5}
               placeholder="e.g. I started the vendor pitch scenario, wrote a half-answer, and then realized I didn't actually know what 'pilot' should mean."
@@ -267,14 +308,14 @@ export default function FeedbackPage() {
           </Section>
 
           {/* Contact */}
-          <Section title="07 — Want us to reach out?" sub="Optional. Only if you'd like to hear back when we ship something tied to this.">
+          <Section title="07 — Want us to reach out?" sub={sessionEmail ? "Pre-filled from your account. Uncheck if you'd prefer to stay anonymous." : "Optional. Only if you'd like to hear back when we ship something tied to this or if we have followup questions."}>
             <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid #DDDCD9", borderRadius: 4, cursor: "pointer", marginBottom: 14 }}>
               <input
                 type="checkbox"
                 checked={data.contact}
                 onChange={(e) => setData({ ...data, contact: e.target.checked })}
               />
-              <span style={{ fontSize: 14, color: "#1A1814" }}>Yes, you can email me when something I flagged ships.</span>
+              <span style={{ fontSize: 14, color: "#1A1814" }}>Yes, you can email me.</span>
             </label>
             {data.contact && (
               <input
@@ -312,14 +353,12 @@ export default function FeedbackPage() {
           <div style={{ padding: 24, border: "1px solid #DDDCD9", background: "#F8F7F5", marginBottom: 18 }}>
             <Kicker>Why we ask</Kicker>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#65605A" }}>
-             The feedback from this form helps us decides what we fix first. If a thing is annoying you, it&apos;s almost certainly annoying others — but we can&apos;t see it without you.
+             Your feedback helps us decide what to improve first. If something is frustrating or slowing you down, there&apos;s a good chance others are feeling it too — and we can&apos;t fix what we don’t know about.
             </p>
-          </div>
-<div style={{ padding: 18, border: "1px dashed #DDDCD9", fontSize: 12.5, color: "#65605A", lineHeight: 1.55 }}>
-            We never share your responses outside the team.
           </div>
         </aside>
       </div>
-    </AppShell>
+      </main>
+    </div>
   )
 }

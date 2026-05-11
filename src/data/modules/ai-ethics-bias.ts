@@ -74,7 +74,7 @@ Classic example: using zip code as a feature in a credit model. Zip code correla
 
 **US law:** Disparate impact can trigger liability under anti-discrimination statutes (Fair Housing Act, Equal Credit Opportunity Act, Title VII) even without discriminatory intent. This applies to lending, hiring, housing, and healthcare. The CFPB and EEOC have both issued guidance specifically addressing algorithmic decision-making.
 
-**EU AI Act (in force 2024):** Categorizes AI systems by risk level. High-risk categories — employment, education, credit, law enforcement, healthcare, critical infrastructure — face mandatory conformity assessments, bias audits, human oversight requirements, and transparency obligations before deployment. This applies to any company deploying into the EU market regardless of where the company is based.
+**EU AI Act (entered into force August 2024):** Categorizes AI systems by risk level and applies on a phased schedule. Prohibited AI practices took effect February 2025. High-risk categories — employment, education, credit, law enforcement, healthcare, critical infrastructure — face mandatory conformity assessments, bias audits, human oversight requirements, and transparency obligations; these rules apply from August 2026 (Annex III systems) and August 2027 (AI embedded in regulated products). This applies to any company deploying into the EU market regardless of where the company is based.
 
 **NIST AI Risk Management Framework:** A voluntary US framework that has become a de facto standard for enterprise AI risk management. Organizes risk management around four functions: Govern, Map, Measure, Manage. Increasingly referenced in procurement requirements and regulatory guidance.
 
@@ -104,7 +104,7 @@ Some use cases should not use AI in their current form:
 
 **Cases where you cannot explain the output.** If a user asks "why was I rejected?" and you cannot produce a coherent, specific answer, you have an accountability gap. Explainability is both an ethical requirement and, in some jurisdictions (EU GDPR Article 22, EU AI Act), a legal one.
 
-**EU AI Act prohibited uses:** Certain uses are categorically prohibited regardless of technical performance: real-time biometric surveillance in public spaces (with narrow exceptions), social scoring systems, subliminal manipulation, and AI that exploits vulnerabilities of specific groups. These are not deployment decisions — they're legal prohibitions.
+**EU AI Act prohibited uses (effective February 2025):** Certain uses are categorically prohibited: real-time biometric surveillance in public spaces (with narrow exceptions), social scoring systems, subliminal manipulation, AI that exploits vulnerabilities of specific groups, predictive policing based solely on profiling, and emotion recognition at workplaces and educational institutions. These are not deployment decisions — they're legal prohibitions already in effect.
 
 ### Vendor Model Bias
 

@@ -10,7 +10,7 @@ async function main() {
 
   // Seed modules
   for (const module of sampleModules) {
-    const { quiz: _quiz, ...moduleData } = module as any
+    const moduleData = module as any
     await db.module.upsert({
       where: { slug: module.slug },
       update: moduleData,

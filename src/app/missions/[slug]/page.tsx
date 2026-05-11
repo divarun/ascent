@@ -10,6 +10,18 @@ import Link from "next/link"
 import { isMissionFree } from "@/config/access"
 import { C } from "@/lib/colors"
 import { MonoLabel, Panel, BulletList } from "@/components/detail-layout"
+import { LevelUpBanner } from "@/components/LevelUpBanner"
+
+function missionDraftKey(slug: string) { return `ascent_mission_draft_${slug}` }
+function loadMissionDraft(slug: string): string {
+  try { return localStorage.getItem(missionDraftKey(slug)) ?? "" } catch { return "" }
+}
+function saveMissionDraft(slug: string, text: string) {
+  try { localStorage.setItem(missionDraftKey(slug), text) } catch {}
+}
+function clearMissionDraft(slug: string) {
+  try { localStorage.removeItem(missionDraftKey(slug)) } catch {}
+}
 
 type MissionData = { id: string; slug: string; title: string; description: string; instructions: string; roles: string[]; difficulty: string; staticGuidance: string; checklist: string[] }
 type MissionFeedback = { assessment: string; highlights: string[]; suggestions: string[]; nextSteps: string[] }
@@ -38,6 +50,8 @@ export default function MissionPage() {
   const [checklistScores, setChecklistScores] = useState<Record<number, ChecklistScore>>({})
   const [selfAssessment, setSelfAssessment] = useState<SelfAssessment | null>(null)
   const [savingAssessment, setSavingAssessment] = useState(false)
+  const [hasDraft, setHasDraft] = useState(false)
+  const [levelUp, setLevelUp] = useState<{ level: number; name: string } | null>(null)
 
   useEffect(() => {
     if (status === "loading") return
@@ -48,6 +62,8 @@ export default function MissionPage() {
     async function load() {
       const res = await fetch(`/api/missions/${slug}`)
       if (res.ok) setMission(await res.json())
+      const draft = loadMissionDraft(slug)
+      if (draft) { setResponse(draft); setHasDraft(true) }
       setLoading(false)
     }
     load()
@@ -62,8 +78,16 @@ export default function MissionPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ response }),
     })
-    if (res.ok) { setFeedback((await res.json()).feedback); setPhase("feedback") }
-    else setSubmitError("Submission failed. Please try again.")
+    if (res.ok) {
+      const data = await res.json()
+      setFeedback(data.feedback)
+      clearMissionDraft(slug)
+      setHasDraft(false)
+      if (data.leveledUp && session) setLevelUp({ level: data.newLevel, name: data.levelName })
+      setPhase("feedback")
+    } else {
+      setSubmitError("Submission failed. Please try again.")
+    }
     setSubmitting(false)
   }
 
@@ -166,7 +190,7 @@ export default function MissionPage() {
 
             <textarea
               value={response}
-              onChange={(e) => setResponse(e.target.value)}
+              onChange={(e) => { setResponse(e.target.value); saveMissionDraft(slug, e.target.value) }}
               placeholder="Write your mission submission here..."
               rows={18}
               style={{ width: "100%", padding: "14px 16px", background: C.bg, border: `1px solid ${C.line}`, fontSize: 14, lineHeight: 1.65, color: C.ink, fontFamily: "inherit", resize: "vertical" as const, outline: "none", boxSizing: "border-box" as const, transition: "border-color 120ms" }}
@@ -178,6 +202,7 @@ export default function MissionPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.06em", color: C.sub }}>
                   {response.length < 100 ? `${100 - response.length} more chars to submit` : `${response.length} chars`}
+                  {hasDraft && response.length > 0 && " · draft saved"}
                 </span>
                 <button
                   onClick={() => setPhase("instructions")}
@@ -209,6 +234,7 @@ export default function MissionPage() {
               <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: C.good }}>
                 ✓ MISSION COMPLETE{session ? " — +40 PTS" : ""}
               </div>
+              {levelUp && <LevelUpBanner level={levelUp.level} name={levelUp.name} />}
               <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", color: C.sub, marginTop: 4 }}>
                 EXPERT PERSPECTIVE — WHAT STRONG SUBMISSIONS ADDRESS
               </div>

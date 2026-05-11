@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { calculateLevel, getLevelLabel } from "@/lib/utils"
 
 export async function POST(
   req: NextRequest,
@@ -15,20 +16,33 @@ export async function POST(
   }
 
   const module = await db.module.findUnique({ where: { slug: params.slug } })
-  // When running on static data (no DB module), use the slug as the stable ID
   const moduleId = module?.id ?? params.slug
 
-  const prog = await db.progress.findUnique({ where: { userId: session.user.id } })
-  if (!prog) {
-    await db.progress.create({
-      data: { userId: session.user.id, completedModules: [moduleId], totalPoints: 25 },
-    })
-  } else if (!prog.completedModules.includes(moduleId)) {
-    await db.progress.update({
-      where: { userId: session.user.id },
-      data: { completedModules: { push: moduleId }, totalPoints: { increment: 25 } },
-    })
-  }
+  const oldProg = await db.progress.findUnique({ where: { userId: session.user.id } })
+  const oldLevel = calculateLevel(oldProg?.totalPoints ?? 0)
+  let newPoints = oldProg?.totalPoints ?? 0
 
-  return NextResponse.json({ success: true })
+  await db.$transaction(async (tx) => {
+    const prog = await tx.progress.findUnique({ where: { userId: session.user.id } })
+    if (!prog) {
+      await tx.progress.create({
+        data: { userId: session.user.id, completedModules: [moduleId], totalPoints: 25 },
+      })
+      newPoints = 25
+    } else if (!prog.completedModules.includes(moduleId)) {
+      const updated = await tx.progress.update({
+        where: { userId: session.user.id },
+        data: { completedModules: { push: moduleId }, totalPoints: { increment: 25 } },
+      })
+      newPoints = updated.totalPoints
+    }
+  })
+
+  const newLevel = calculateLevel(newPoints)
+  return NextResponse.json({
+    success: true,
+    leveledUp: newLevel > oldLevel,
+    newLevel,
+    levelName: getLevelLabel(newLevel),
+  })
 }

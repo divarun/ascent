@@ -5,11 +5,13 @@ import { AppShell } from "@/components/layout/AppShell"
 import { MissionsList } from "@/components/MissionsList"
 import { sampleMissions } from "@/data/missions"
 
+export const revalidate = 60
+
 export default async function MissionsPage() {
   const session = await getServerSession(authOptions)
 
   let missions = await db.mission.findMany({
-    where: { published: true },
+    where: { published: true, enabled: true },
     orderBy: { createdAt: "asc" },
   })
 
@@ -18,22 +20,23 @@ export default async function MissionsPage() {
     roles: string[]; difficulty: string; completed: boolean
   }>
 
+  let completedIds: string[] = []
+  if (session?.user?.id) {
+    const progress = await db.progress.findUnique({ where: { userId: session.user.id } })
+    completedIds = progress?.completedMissions ?? []
+  }
+
   if (missions.length === 0) {
-    missionList = sampleMissions.map((m) => ({
+    missionList = sampleMissions.filter((m) => m.enabled).map((m) => ({
       id: m.slug,
       slug: m.slug,
       title: m.title,
       description: m.description,
       roles: [...m.roles],
       difficulty: m.difficulty,
-      completed: false,
+      completed: completedIds.includes(m.slug),
     }))
   } else {
-    let completedIds: string[] = []
-    if (session?.user?.id) {
-      const progress = await db.progress.findUnique({ where: { userId: session.user.id } })
-      completedIds = progress?.completedMissions ?? []
-    }
     missionList = missions.map((m) => ({
       id: m.id,
       slug: m.slug,
@@ -59,10 +62,10 @@ export default async function MissionsPage() {
           className="m-0 font-normal"
           style={{ fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814" }}
         >
-          {missionList.length} exercises on your real work.
+          Apply it to your work.
         </h1>
         <p className="mt-6 mb-0 max-w-2xl" style={{ fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-          Missions don&apos;t simulate. They ask you to do the thing — on a workflow you actually own — and submit what you wrote.
+          Each mission asks you to complete a concrete task on something you actually own — a workflow, a team, a product area. Submit what you produce.
         </p>
       </div>
 

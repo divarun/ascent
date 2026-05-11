@@ -5,17 +5,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    env_file: .env
     environment:
+      # Override .env values so the app reaches postgres via the Docker network
       - DATABASE_URL=postgresql://ascent:ascent@postgres:5432/ascent
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=dev-secret-change-in-production
+      - DIRECT_URL=postgresql://ascent:ascent@postgres:5432/ascent
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
 
   postgres:
     image: postgres:16-alpine

@@ -159,7 +159,7 @@ Build dashboards that track these metrics by feature, output type, and user segm
 
 Users have a right to know when AI is involved in producing content or decisions that affect them. This is both an ethical position and, increasingly, a legal requirement.
 
-**EU AI Act requirements:** Systems that interact with humans must disclose that they are AI, unless this is obvious. Deepfakes and AI-generated content in specific contexts require explicit labeling. High-risk AI systems have mandatory transparency obligations to affected individuals.
+**EU AI Act requirements:** The Act entered into force August 2024 on a phased schedule. Prohibited AI practices took effect February 2025. Transparency requirements (Article 50) — including disclosure that a system is AI when interacting with humans, and labeling of AI-generated content — apply from August 2026. High-risk AI systems in employment, education, credit, healthcare, and law enforcement face conformity assessments and mandatory transparency obligations, also from August 2026. Organizations should be building toward these requirements now.
 
 **US regulatory landscape:** The FTC has issued guidance on AI disclosure. Several states have passed or are considering disclosure requirements for AI-generated content, particularly in political advertising and consumer-facing automated decisions.
 

@@ -2,7 +2,7 @@ export const whatLlmsActuallyDo = {
   slug: "what-llms-actually-do",
   title: "What LLMs Actually Do",
   summary:
-    "How large language models generate text, learn from data, follow instructions, and why they behave more like probabilistic generators than reasoning engines.",
+    "How large language models generate text, learn from data, follow instructions, and why they behave more like probabilistic generators than reasoning engines — including what reasoning models change and what they don't.",
   difficulty: "BEGINNER" as const,
   roles: ["PM", "EM", "IC"] as const,
   tags: ["foundations", "llm", "concepts"],
@@ -19,7 +19,7 @@ Models don't process words — they process tokens. A token is roughly a word fr
 
 This matters for several practical reasons:
 
-**Cost:** API pricing is per token. A 750-word document is approximately 1,000 tokens. Your system prompt is paid for on every single request.
+**Cost:** API pricing is per token. A 750-word document is approximately 1,000 tokens. Your system prompt is paid for on every single request. Reasoning models add an additional cost dimension: they generate internal "thinking" tokens before producing a final response — tokens that never appear in the output but are billed as compute.
 
 **Counting and arithmetic:** Because models process token sequences rather than words or characters, they're unreliable at tasks that require character-level counting. "How many letters are in 'strawberry'?" fails more often than you'd expect because the model reasons over tokens, not characters.
 
@@ -27,7 +27,7 @@ This matters for several practical reasons:
 
 **Whitespace and formatting:** Unusual whitespace, special characters, and some code patterns produce unexpected tokenizations that can affect model behavior.
 
-**The context window is measured in tokens.** A 128,000-token context window is roughly 96,000 words — about two novels. The model can process everything within this window as a single unit; anything beyond it is inaccessible.
+**The context window is measured in tokens.** Flagship models as of 2026 typically support context windows between 128,000 and 2 million tokens. However, advertised context size and effective context size are not the same thing — more on this below.
 
 ### The Core Generation Mechanic
 
@@ -79,7 +79,7 @@ The model processes all of this simultaneously, with transformer attention allow
 **Practical implications:**
 - Everything in the context affects the response, including parts you didn't intend to influence it
 - Longer contexts cost more and have higher latency
-- Quality of attention over very long contexts degrades — information in the middle of a very long context receives less reliable attention than information at the beginning or end
+- **Advertised context size ≠ effective context size.** Benchmarks consistently show that even models with multi-million token windows often maintain reliable recall and reasoning across only a portion of that range. Information in the middle of very long contexts tends to receive less reliable attention than information at the beginning or end. When building on long-context features, test at your actual context lengths — don't assume the spec sheet translates to production performance.
 - Users cannot directly observe what's in the context; they only see the output
 
 ### What Emerges from Scale
@@ -107,6 +107,20 @@ At temperature 0, the model always selects the most probable token — outputs a
 
 **What temperature doesn't control:** Whether the output is correct or grounded. A temperature-0 model confidently producing wrong answers is still producing wrong answers. Temperature affects variety, not accuracy.
 
+### Reasoning Models: A Different Generation Strategy
+
+Since 2024, a class of models — often called reasoning models or large reasoning models (LRMs) — has introduced a meaningfully different generation approach. Rather than producing a final response immediately, these models generate extended internal reasoning chains before arriving at an answer. This uses more compute at inference time (test-time compute scaling) but produces more reliable outputs on complex, multi-step tasks.
+
+For product teams, reasoning models change a few things:
+
+**On quality:** Reasoning models substantially outperform standard models on structured, logic-intensive tasks — math, code, multi-step planning. On simpler tasks like summarization or drafting, the quality difference is smaller and the cost is higher.
+
+**On sycophancy:** Research has found a nuanced tradeoff. The extended reasoning process can act as a "logical constraint" that forces models to work through implications before agreeing with a user — which reduces some sycophantic responses. However, reasoning models can also use their reasoning capability for post-hoc rationalization, constructing plausible-sounding justifications that accommodate a user's mistaken beliefs rather than correcting them. Reasoning doesn't eliminate sycophancy; it changes the form it takes.
+
+**On cost and latency:** Reasoning models generate thinking tokens in addition to output tokens. These hidden tokens are billed as compute and add latency. For time-sensitive or high-volume use cases, this tradeoff needs to be evaluated explicitly.
+
+**What reasoning models don't change:** The core mechanic is still statistical token prediction, and the weights are still fixed after training. The improvement comes from how inference-time compute is allocated, not from the model acquiring new knowledge or reasoning capabilities it didn't have at training time.
+
 ### What LLMs Are and Aren't
 
 These distinctions are worth internalizing because violations of them are where product failures come from.
@@ -117,7 +131,7 @@ These distinctions are worth internalizing because violations of them are where 
 
 **LLMs are not rule engines.** They don't follow instructions the way code follows logic. They pattern-match against training examples that include instruction-following. This is why instructions can be inconsistently followed and why novel instruction phrasings can produce different results.
 
-**LLMs are not reasoning systems in the formal sense.** They produce outputs that look like reasoning and that pass many tests of reasoning quality. But the underlying process is statistical pattern matching, not formal inference. This is why models can produce reasoning chains that are plausible at each step but wrong overall, and why formal logical and mathematical tasks are unreliable without external tools.
+**LLMs are not reasoning systems in the formal sense.** They produce outputs that look like reasoning and that pass many tests of reasoning quality. Reasoning models extend this significantly — they can now solve competition-level math and science problems reliably. But the underlying process is still statistical pattern matching extended through learned reasoning strategies, not formal inference from first principles. This is why even reasoning models can produce chains that are plausible at each step but wrong overall, and why formal logical and mathematical tasks still benefit from external tool use (code execution, calculators) for guaranteed correctness.
 
 **What LLMs are:** General-purpose probabilistic text generation systems that have internalized statistical patterns from an enormous sample of human-generated text. This gives them flexible, surprisingly generalizable capability across a huge range of tasks — while also giving them the failure modes of statistical pattern matching rather than formal computation or factual recall.
 
@@ -128,17 +142,18 @@ For building reliable AI features, the most useful mental model is:
 An LLM is a general-purpose probabilistic generation engine. It produces plausible text given context. "Plausible" means statistically likely given training data — it doesn't mean true, consistent, or verifiable.
 
 This model predicts the failure modes:
-- **Hallucination:** When the model doesn't know something, it generates plausible-sounding continuation anyway
+- **Hallucination:** When the model doesn't know something, it generates plausible-sounding continuation anyway. RLHF can amplify this by rewarding confident, coherent-sounding responses over hedged accurate ones.
 - **Inconsistency:** Probabilistic selection means identical inputs can produce different outputs
 - **Brittleness:** Inputs outside the training distribution break the statistical patterns the model relies on
-- **Sycophancy:** RLHF training rewarded responses humans rated positively; humans sometimes rate agreeable responses positively
-- **Reasoning errors:** Statistical pattern matching produces reasoning-shaped outputs without formal reasoning guarantees
+- **Sycophancy:** RLHF training rewarded responses humans rated positively; humans sometimes rate agreeable responses positively. Reasoning models reduce some sycophancy but can introduce rationalized sycophancy — plausible-sounding justifications for agreeing with incorrect user beliefs.
+- **Reasoning errors:** Statistical pattern matching produces reasoning-shaped outputs without formal reasoning guarantees, even in reasoning models
 
 And it predicts where the model works well:
 - Tasks where the training data contained many similar examples
 - Tasks where approximate outputs are valuable
 - Tasks where humans verify, edit, or provide feedback on outputs
 - Tasks where external grounding (retrieved documents, tool outputs) supplements statistical generation
+- Complex, logic-intensive tasks where reasoning models can be deployed with appropriate latency and cost tolerance
 
 The engineering implication: LLMs work best when combined with constraints — structured outputs, retrieval systems, validation layers, and human review — that compensate for the limits of probabilistic generation. They work worst when treated as authoritative, when asked to guarantee consistency, or when deployed without evaluation infrastructure.`,
   quiz: [
@@ -160,7 +175,17 @@ The engineering implication: LLMs work best when combined with constraints — s
         "The model confused the document with another document stored in its context window",
       ],
       correct: 1,
-      explanation: "LLMs generate outputs token-by-token based on statistical likelihood, not factual recall. When information is absent, the model produces what sounds plausible — a hallucination. 'Most likely continuation' is not the same as 'correct'.",
+      explanation: "LLMs generate outputs token-by-token based on statistical likelihood, not factual recall. When information is absent, the model produces what sounds plausible — a hallucination. 'Most likely continuation' is not the same as 'correct'. RLHF can amplify this by rewarding confident-sounding responses.",
+    },
+    {
+      question: "A team switches to a reasoning model for a customer-facing assistant and notices it now constructs detailed logical arguments that agree with users even when those users are factually wrong. What explains this?",
+      options: [
+        "Reasoning models have higher temperature by default, causing more variable outputs",
+        "Reasoning models can use their extended reasoning capability for post-hoc rationalization — building plausible-sounding justifications for sycophantic conclusions rather than correcting them",
+        "The reasoning model has access to more training data and is more likely to agree with common beliefs",
+      ],
+      correct: 1,
+      explanation: "Reasoning models don't eliminate sycophancy — they change the form it takes. While extended reasoning can act as a check on immediate agreement, it can also be co-opted for rationalization: the model reasons toward a user-pleasing conclusion rather than reasoning toward the correct one. This is an active area of research and a known production risk for reasoning model deployments.",
     },
   ],
 }

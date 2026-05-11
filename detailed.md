@@ -4,48 +4,47 @@ Setup, configuration, project structure, and content authoring.
 
 ---
 
-## Quick start (Docker)
+## Setup
 
-**Prerequisites:** Docker, Docker Compose
+### 1. Go to the project folder
 
 ```bash
-# 1. Clone the repo and enter the directory
 cd ascent
-
-# 2. Copy the env file
-cp .env.example .env
-
-# 3. Start the database and app
-docker compose up
-
-# 4. In a separate terminal, run migrations and seed content
-docker compose exec app npx prisma migrate deploy
-docker compose exec app npm run db:seed
-
-# 5. Open http://localhost:3000
 ```
 
-All feedback is predefined static content. No external calls needed.
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set `NEXTAUTH_SECRET` (generate one with `openssl rand -base64 32`).
 
 ---
 
-## Local development (no Docker)
+### Path A: With Docker
+
+**Prerequisites:** Docker and Docker Compose installed.
 
 ```bash
-# 1. Install dependencies
+# Start postgres and the app
+docker compose up -d
+```
+
+### Path B: Without Docker
+
+**Prerequisites:** Node.js 20+ and a PostgreSQL instance running locally.
+
+```bash
+# Install dependencies
 npm install
+```
 
-# 2. Copy and configure env
-cp .env.example .env
-# Edit DATABASE_URL to point to your local PostgreSQL instance
+Edit `DATABASE_URL` in `.env` to point to your local PostgreSQL instance.
 
-# 3. Run database migrations
-npx prisma migrate dev
+**Start the dev server**
 
-# 4. Seed content
-npm run db:seed
-
-# 5. Start dev server
+```bash
 npm run dev
 ```
 
@@ -53,14 +52,33 @@ The app runs at `http://localhost:3000`.
 
 ---
 
+### Database Setup
+
+**Create database tables**
+
+```bash
+npm run db:migrate
+```
+
+**Seed content** 
+
+```bash
+npm run db:seed
+```
+
+---
+
 ## Environment variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | ✓ | — | PostgreSQL connection string |
-| `NEXTAUTH_URL` | ✓ | `http://localhost:3000` | Base URL, used by NextAuth for callbacks |
-| `NEXTAUTH_SECRET` | ✓ | — | JWT signing secret — any random string, keep it secret in production |
-Generate a secret with: `openssl rand -base64 32`
+| `DATABASE_URL` | ✓ | — | PostgreSQL connection string (non-pooled) |
+| `DIRECT_URL` | — | same as `DATABASE_URL` | Direct connection for Prisma migrations; set separately if using a connection pooler |
+| `NEXTAUTH_URL` | ✓ | `http://localhost:3000` | Base URL used by NextAuth for callbacks |
+| `NEXTAUTH_SECRET` | ✓ | — | JWT signing secret — keep secret in production. Generate: `openssl rand -base64 32` |
+| `ADMIN_USERNAME` | — | `admin` | Username for the built-in admin account |
+| `ADMIN_PASSWORD` | — | `admin` | Password for the built-in admin account — change in production |
+| `NEXT_PUBLIC_BETA` | — | `true` | Show the beta banner; set to `false` once stable |
 
 ---
 
@@ -83,36 +101,57 @@ Ascent/
 │   │   ├── learn/             # Module list and individual module reader
 │   │   ├── scenarios/         # Scenario list and simulation player
 │   │   ├── missions/          # Mission list and submission form
-│   │   ├── basics/            # Client-side AI quiz (no auth needed)
+│   │   ├── profile/           # User profile page
+│   │   ├── bug-report/        # Bug report submission
+│   │   ├── feedback/          # Feedback submission
+│   │   ├── forgot-password/   # Password reset request
+│   │   ├── reset-password/    # Password reset form
+│   │   ├── admin/             # Admin dashboard (bug reports, feedback, content, users)
 │   │   └── api/
-│   │       ├── auth/          # NextAuth handler + /signup
-│   │       ├── modules/       # List + complete
+│   │       ├── auth/          # NextAuth handler, /signup, /forgot-password, /reset-password
+│   │       ├── modules/       # List + fetch + complete
 │   │       ├── scenarios/     # List + fetch + attempt submit
 │   │       ├── missions/      # List + fetch + submission
 │   │       ├── onboarding/    # Profile creation + readiness scoring
-│   │       └── progress/      # User progress read
+│   │       ├── progress/      # User progress read
+│   │       ├── profile/       # Profile update
+│   │       ├── bug-report/    # Bug report submission
+│   │       ├── feedback/      # Feedback submission
+│   │       └── admin/         # Admin CRUD for content, bug reports, feedback
 │   │
 │   ├── components/
 │   │   ├── layout/
 │   │   │   ├── AppShell.tsx   # Page wrapper
 │   │   │   ├── Sidebar.tsx    # Navigation + auth/guest footer
 │   │   │   └── Providers.tsx  # SessionProvider
+│   │   ├── admin/             # Admin-specific UI components
 │   │   ├── ModuleList.tsx     # Client list component with role filter
 │   │   ├── ScenariosList.tsx  # Client list component with role filter
-│   │   └── MissionsList.tsx   # Client list component with role filter
+│   │   ├── MissionsList.tsx   # Client list component with role filter
+│   │   ├── BetaBanner.tsx
+│   │   ├── FilterBar.tsx
+│   │   ├── LevelUpBanner.tsx
+│   │   └── detail-layout.tsx
+│   │
+│   ├── config/                # App-wide config (access rules, app settings)
 │   │
 │   ├── data/                  # Static content (used as seed source + DB fallback)
-│   │   ├── modules.ts         # 20 learning modules (re-exports from modules/)
+│   │   ├── modules.ts         # 22 learning modules (re-exports from modules/)
 │   │   ├── modules/           # One file per module
 │   │   ├── scenarios.ts       # 15 scenarios (re-exports from scenarios/)
 │   │   ├── scenarios/         # One file per scenario
 │   │   ├── missions.ts        # 12 missions (re-exports from missions/)
 │   │   └── missions/          # One file per mission
 │   │
+│   ├── hooks/                 # Custom React hooks
+│   ├── types/                 # TypeScript type declarations
+│   │
 │   └── lib/
 │       ├── db.ts              # Prisma client singleton
 │       ├── auth.ts            # NextAuth config (Credentials provider, JWT)
+│       ├── email.ts           # Email sending (password reset)
 │       ├── onboarding.ts      # Rules-based readiness profile scoring
+│       ├── colors.ts          # Color utilities
 │       └── utils.ts           # cn(), level labels, color helpers
 │
 ├── docker-compose.yml
@@ -161,10 +200,20 @@ Create a new file in `src/data/modules/` and export it from `src/data/modules.ts
   tags: ["foundations"],
   order: 7,                    // display order in the list
   content: `## Markdown content here...`,
+  quiz: [
+    {
+      question: "Question text",
+      options: ["Option A", "Option B", "Option C"],
+      correct: 0,              // index of the correct option
+      explanation: "Why this answer is correct",
+    },
+  ],
 }
 ```
 
-Re-run `npm run db:seed` to push it to the database.
+Re-run the seed command after adding content:
+- With Docker: `docker compose exec app npm run db:seed`
+- Without Docker: `npm run db:seed`
 
 ### New crucible
 
@@ -175,7 +224,8 @@ Create a new file in `src/data/scenarios/` and export it from `src/data/scenario
   slug: "unique-slug",
   title: "...",
   summary: "One line shown in the list",
-  role: "PM" | "EM" | "IC",   // single role this crucible targets
+  roles: ["PM", "EM"],         // one or more roles this crucible targets
+  isUnlocked: true,            // false = locked/coming soon
   difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
   industry: "SaaS",            // optional, shown as a tag
   context: `Long scenario text...`,
@@ -232,5 +282,6 @@ Create a new file in `src/data/missions/` and export it from `src/data/missions.
 - Auth uses **credentials only** (email + password with bcrypt). No OAuth.
 - Sessions are **JWT-based** (stateless) — no session table in the DB.
 - Passwords are hashed with bcrypt (10 rounds) on signup.
+- Password reset is supported via `/forgot-password` → email link → `/reset-password`.
 - `NEXTAUTH_SECRET` must be set or NextAuth will refuse to start in production.
 - All API routes check session via `getServerSession(authOptions)`. Guest requests proceed without a session; only DB writes are gated.

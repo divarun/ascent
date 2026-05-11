@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { Providers } from "@/components/layout/Providers"
+import { BetaBanner } from "@/components/BetaBanner"
 
 export const metadata: Metadata = {
   title: "Ascent — AI Decision Training",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <BetaBanner />
         <Providers>{children}</Providers>
       </body>
     </html>

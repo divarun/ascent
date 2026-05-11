@@ -15,6 +15,8 @@ CREATE TABLE "User" (
     "passwordHash" TEXT,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
+    "passwordResetExpires" TIMESTAMP(3),
+    "passwordResetToken" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -61,11 +63,11 @@ CREATE TABLE "Profile" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "role" "Role" NOT NULL,
-    "companyStage" TEXT NOT NULL,
-    "industry" TEXT NOT NULL,
     "aiFamiliarity" "AiFamiliarity" NOT NULL,
     "biggestChallenge" TEXT NOT NULL,
     "goals" TEXT[],
+    "companyStage" TEXT,
+    "industry" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "conceptualScore" INTEGER NOT NULL DEFAULT 0,
@@ -88,6 +90,8 @@ CREATE TABLE "Module" (
     "tags" TEXT[],
     "order" INTEGER NOT NULL DEFAULT 0,
     "published" BOOLEAN NOT NULL DEFAULT true,
+    "enabled" BOOLEAN NOT NULL DEFAULT false,
+    "quiz" JSONB NOT NULL DEFAULT '[]',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Module_pkey" PRIMARY KEY ("id")
@@ -108,6 +112,7 @@ CREATE TABLE "Scenario" (
     "staticFeedback" JSONB NOT NULL,
     "published" BOOLEAN NOT NULL DEFAULT true,
     "isUnlocked" BOOLEAN NOT NULL DEFAULT false,
+    "enabled" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Scenario_pkey" PRIMARY KEY ("id")
@@ -142,6 +147,7 @@ CREATE TABLE "Mission" (
     "checklist" TEXT[],
     "published" BOOLEAN NOT NULL DEFAULT true,
     "isUnlocked" BOOLEAN NOT NULL DEFAULT false,
+    "enabled" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Mission_pkey" PRIMARY KEY ("id")
@@ -182,8 +188,10 @@ CREATE TABLE "BugReport" (
     "steps" TEXT,
     "severity" TEXT NOT NULL,
     "surface" TEXT,
+    "device" TEXT,
     "email" TEXT,
     "userId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'open',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "BugReport_pkey" PRIMARY KEY ("id")
@@ -200,6 +208,7 @@ CREATE TABLE "Feedback" (
     "nps" INTEGER,
     "email" TEXT,
     "userId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'open',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Feedback_pkey" PRIMARY KEY ("id")
@@ -216,6 +225,7 @@ CREATE UNIQUE INDEX "Module_slug_key" ON "Module"("slug");
 CREATE UNIQUE INDEX "Scenario_slug_key" ON "Scenario"("slug");
 CREATE UNIQUE INDEX "Mission_slug_key" ON "Mission"("slug");
 CREATE UNIQUE INDEX "Progress_userId_key" ON "Progress"("userId");
+CREATE UNIQUE INDEX "User_passwordResetToken_key" ON "User"("passwordResetToken");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

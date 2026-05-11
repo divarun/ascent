@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { sampleMissions } from "@/data/missions"
 import { isMissionFree } from "@/config/access"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { calculateLevel, getLevelLabel } from "@/lib/utils"
 import { z } from "zod"
 
 type MissionFeedback = {
@@ -80,7 +81,15 @@ export async function POST(
     nextSteps: ["Re-read the checklist and verify your submission covers each point", "Share with a peer for feedback on your reasoning"],
   }
 
+  let leveledUp = false
+  let newLevel = 1
+  let levelName = "Aware"
+
   if (session?.user?.id && dbMission) {
+    const oldProg = await db.progress.findUnique({ where: { userId: session.user.id } })
+    const oldLevel = calculateLevel(oldProg?.totalPoints ?? 0)
+    let newPoints = oldProg?.totalPoints ?? 0
+
     await db.$transaction(async (tx: any) => {
       await tx.missionSubmission.create({
         data: {
@@ -96,16 +105,22 @@ export async function POST(
         await tx.progress.create({
           data: { userId: session.user.id, completedMissions: [dbMission.id], totalPoints: 40 },
         })
+        newPoints = 40
       } else if (!prog.completedMissions.includes(dbMission.id)) {
-        await tx.progress.update({
+        const updated = await tx.progress.update({
           where: { userId: session.user.id },
           data: { completedMissions: { push: dbMission.id }, totalPoints: { increment: 40 } },
         })
+        newPoints = updated.totalPoints
       }
     })
+
+    newLevel = calculateLevel(newPoints)
+    levelName = getLevelLabel(newLevel)
+    leveledUp = newLevel > oldLevel
   }
 
-  return NextResponse.json({ feedback })
+  return NextResponse.json({ feedback, leveledUp, newLevel, levelName })
 }
 
 export async function PATCH(

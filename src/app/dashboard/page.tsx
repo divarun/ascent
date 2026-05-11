@@ -147,14 +147,14 @@ export default async function DashboardPage() {
       orderBy: { completedAt: "desc" },
       take: 5,
     }),
-    db.module.findMany({ where: { published: true }, orderBy: { order: "asc" } }),
+    db.module.findMany({ where: { published: true, enabled: true }, orderBy: { order: "asc" } }),
     db.scenario.findMany({
-      where: { published: true },
+      where: { published: true, enabled: true },
       select: { id: true, slug: true, title: true, summary: true, roles: true, difficulty: true },
       orderBy: { createdAt: "asc" },
     }),
     db.mission.findMany({
-      where: { published: true },
+      where: { published: true, enabled: true },
       select: { id: true, slug: true, title: true, description: true, roles: true, difficulty: true },
       orderBy: { createdAt: "asc" },
     }),
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
   // Modules: role-filtered, difficulty-ordered, first incomplete
   const moduleList = dbModules.length > 0
     ? dbModules.map(m => ({ slug: m.slug, title: m.title, summary: m.summary, difficulty: m.difficulty, roles: m.roles as string[], done: completedModuleIds.includes(m.id) }))
-    : sampleModules.map(m => ({ slug: m.slug, title: m.title, summary: m.summary, difficulty: m.difficulty, roles: [...m.roles] as string[], done: completedModuleIds.includes(m.slug) }))
+    : sampleModules.filter(m => m.enabled).map(m => ({ slug: m.slug, title: m.title, summary: m.summary, difficulty: m.difficulty, roles: [...m.roles] as string[], done: completedModuleIds.includes(m.slug) }))
 
   const nextModule = sortByChallengeThenDifficulty(
     moduleList.filter(m => m.roles.includes(userRole) && !m.done),
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
   // Scenarios: role-filtered, challenge-aware, first incomplete
   const scenarioList = dbScenarios.length > 0
     ? dbScenarios
-    : sampleScenarios.map(s => ({ id: s.slug, slug: s.slug, title: s.title, summary: s.summary, roles: [...s.roles] as string[], difficulty: s.difficulty }))
+    : sampleScenarios.filter(s => s.enabled).map(s => ({ id: s.slug, slug: s.slug, title: s.title, summary: s.summary, roles: [...s.roles] as string[], difficulty: s.difficulty }))
 
   const nextScenario = sortByChallengeThenDifficulty(
     (scenarioList as Array<{ id: string; slug: string; title: string; summary: string; roles: string[]; difficulty: string }>)
@@ -206,7 +206,7 @@ export default async function DashboardPage() {
   // Missions: role-filtered, challenge-aware, first incomplete
   const missionList = dbMissions.length > 0
     ? dbMissions.map(m => ({ id: m.id, slug: m.slug, title: m.title, description: m.description, roles: m.roles as string[], difficulty: m.difficulty, done: completedMissionIds.includes(m.id) }))
-    : sampleMissions.map(m => ({ id: m.slug, slug: m.slug, title: m.title, description: m.description ?? "", roles: [...m.roles] as string[], difficulty: m.difficulty, done: completedMissionIds.includes(m.slug) }))
+    : sampleMissions.filter(m => m.enabled).map(m => ({ id: m.slug, slug: m.slug, title: m.title, description: m.description ?? "", roles: [...m.roles] as string[], difficulty: m.difficulty, done: completedMissionIds.includes(m.slug) }))
 
   const nextMission = sortByChallengeThenDifficulty(
     missionList.filter(m => m.roles.includes(userRole) && !m.done),
@@ -220,7 +220,7 @@ export default async function DashboardPage() {
   // Combined recent activity
   type ActivityItem = { id: string; type: "scenario" | "mission"; title: string; slug: string; score: number | null; points: number; date: Date }
   const activity: ActivityItem[] = [
-    ...recentScenarios.map(a => ({ id: a.id, type: "scenario" as const, title: a.scenario.title, slug: a.scenario.slug, score: a.score, points: a.score ? 50 : 0, date: a.createdAt })),
+    ...recentScenarios.map(a => ({ id: a.id, type: "scenario" as const, title: a.scenario.title, slug: a.scenario.slug, score: a.score, points: a.score !== null ? 50 : 0, date: a.createdAt })),
     ...recentMissions.map(m => ({ id: m.id, type: "mission" as const, title: m.mission.title, slug: m.mission.slug, score: null, points: 40, date: m.completedAt })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5)
 
@@ -260,7 +260,7 @@ export default async function DashboardPage() {
               L0{level} · {levelName.toUpperCase()}
             </div>
             <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 36, lineHeight: 1.05, color: "#1A1814", whiteSpace: "nowrap" }}>
-              {currentPoints} / {nextLevelPts} pts
+              {level < 4 ? `${currentPoints} / ${nextLevelPts} pts` : `${currentPoints} pts`}
             </div>
           </div>
           {level < 4 && (

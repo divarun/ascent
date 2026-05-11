@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
+import { appConfig } from "@/config/app"
 
 const T = {
   bg: "#F0EFEB",
@@ -16,9 +17,9 @@ const T = {
 }
 
 const PILLARS = [
-  { tag: "01", name: "Foundation", sub: "Read",   desc: "Text-first modules. What LLMs actually do. What they're bad at. Build vs. buy. Ethics. Security. Agents.", meta: "20 modules",      href: "/learn" },
-  { tag: "02", name: "Scenarios",   sub: "Decide", desc: "Decision simulations drawn from real pitches, scope fights, biased models, rogue agents, and cost overruns. Write your reasoning, get direct feedback.", meta: "15 scenarios", href: "/scenarios" },
-  { tag: "03", name: "Missions",    sub: "Apply",  desc: "Exercises you complete on your real work. Find an AI opportunity. Draft a usage policy. Run a bias check. Write a feature brief.", meta: "12 missions",     href: "/missions" },
+  { tag: "01", name: "Foundation", sub: "Read",   desc: "Text-first modules. What LLMs actually do. What they're bad at. Build vs. buy. Ethics. Security. Agents.", meta: "Browse modules",   href: "/learn" },
+  { tag: "02", name: "Scenarios",   sub: "Decide", desc: "Decision simulations drawn from real pitches, scope fights, biased models, rogue agents, and cost overruns. Write your reasoning, get direct feedback.", meta: "Try a scenario", href: "/scenarios" },
+  { tag: "03", name: "Missions",    sub: "Apply",  desc: "Exercises you complete on your real work. Find an AI opportunity. Draft a usage policy. Run a bias check. Write a feature brief.", meta: "Pick a mission",  href: "/missions" },
 ]
 
 const LEVELS = [
@@ -138,7 +139,7 @@ function Header() {
           ) : (
             <>
               <Link href="/login" style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>Sign in</Link>
-              <Btn primary href="/learn">Start free</Btn>
+              <Btn primary href="/learn">Start free →</Btn>
             </>
           )}
         </nav>
@@ -166,19 +167,10 @@ function Hero() {
           Ascent is a structured curriculum for product managers, engineering managers, and ICs. Work through vendor pitches, scope fights, and build-vs-buy calls — the situations your role actually requires you to navigate. Get direct feedback on your reasoning.
         </p>
         <div style={{ marginTop: 36, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-          <Btn primary href="/learn">Start as guest →</Btn>
-          <Btn href="/learn">Browse the curriculum</Btn>
+          <Btn primary href="/learn">Start free →</Btn>
+          <Btn href="/signup">Create an account</Btn>
         </div>
 
-        {/* Stat row */}
-        <div style={{ marginTop: 80, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, borderTop: `1px solid ${T.line}`, position: "relative", zIndex: 1 }}>
-          {[["20", "modules"], ["15", "decision scenarios"], ["12", "applied missions"], ["4", "levels of mastery"]].map(([n, l], i) => (
-            <div key={i} style={{ padding: "22px 22px 0 0", borderRight: i < 3 ? `1px solid ${T.line}` : "none" }}>
-              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 44, lineHeight: 1, color: T.ink, letterSpacing: "-0.02em" }}>{n}</div>
-              <div style={{ marginTop: 8, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: T.sub, letterSpacing: "0.1em", textTransform: "uppercase" }}>{l}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   )
@@ -281,7 +273,7 @@ function CTASection() {
               Write a real answer. Read the feedback on your reasoning. Work through the curriculum at your own pace.
             </p>
             <div style={{ marginTop: 36, display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Btn primary href="/learn">Start as guest →</Btn>
+              <Btn primary href="/learn">Start free →</Btn>
               <Btn href="/signup">Create an account</Btn>
             </div>
           </div>
@@ -331,7 +323,7 @@ function Footer() {
         ))}
       </div>
       <div style={{ borderTop: `1px solid ${T.line}`, padding: "20px 40px", maxWidth: MAX, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: T.sub }}>ASCENT · v1.0 · MMXXVI</div>
+        <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: T.sub }}>ASCENT · v{appConfig.version}</div>
         <div style={{ fontSize: 12.5, color: T.sub }}>For product managers, engineering managers, and individual contributors.</div>
       </div>
     </footer>
