@@ -16,7 +16,7 @@ const navItems = [
   { href: "/profile",   label: "Profile",   authOnly: true },
 ]
 
-function AscentMark({ small = false }: { small?: boolean }) {
+export function AscentMark({ small = false }: { small?: boolean }) {
   const size = small ? 18 : 22
   return (
     <div className="flex items-center gap-2.5">
@@ -40,7 +40,12 @@ function AscentMark({ small = false }: { small?: boolean }) {
   )
 }
 
-export function Sidebar() {
+type SidebarProps = {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const [guestRole, setGuestRole] = useState<string | null>(null)
@@ -61,15 +66,25 @@ export function Sidebar() {
   const signedIn = !!session?.user
 
   return (
-    <aside className="w-60 min-h-screen border-r border-border bg-background flex flex-col sticky top-0 h-screen">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-border">
-        <Link href={signedIn ? "/dashboard" : "/"} className="text-foreground no-underline">
+    <aside className="w-60 h-full border-r border-border bg-background flex flex-col">
+      <div className="px-5 py-5 border-b border-border flex items-center justify-between">
+        <Link href={signedIn ? "/dashboard" : "/"} className="text-foreground no-underline" onClick={onClose}>
           <AscentMark small />
         </Link>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1 -mr-1 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Close menu"
+          >
+            <svg width={18} height={18} viewBox="0 0 18 18" fill="none">
+              <line x1="3" y1="3" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="15" y1="3" x2="3" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3.5 py-4 flex flex-col gap-0.5">
         {navItems.map((item) => {
           if (item.authOnly && !signedIn) return null
@@ -78,6 +93,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className="flex items-center justify-between px-3 py-2 rounded text-sm no-underline transition-all duration-150"
               style={{
                 color: active ? "#F8F7F5" : "#1A1814",
@@ -91,7 +107,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
       {signedIn ? (
         <div className="px-4 py-4 border-t border-border">
           <div className="text-sm font-medium text-foreground truncate mb-2.5">{session.user.name ?? session.user.email}</div>
@@ -129,6 +144,7 @@ export function Sidebar() {
           )}
           <Link
             href="/signup"
+            onClick={onClose}
             className="block text-center py-2 rounded text-sm font-medium no-underline transition-colors"
             style={{ background: "#1A1814", color: "#F8F7F5" }}
           >
@@ -136,6 +152,7 @@ export function Sidebar() {
           </Link>
           <Link
             href="/login"
+            onClick={onClose}
             className="block text-center py-2 text-sm no-underline"
             style={{ color: "#65605A" }}
           >
@@ -144,5 +161,26 @@ export function Sidebar() {
         </div>
       )}
     </aside>
+  )
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+  return (
+    <>
+      {/* Desktop: always-visible sticky sidebar */}
+      <div className="hidden md:flex w-60 min-h-screen sticky top-0 h-screen shrink-0">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile: overlay drawer */}
+      {isOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
+          <div className="relative z-10 h-full">
+            <SidebarContent onClose={onClose} />
+          </div>
+        </div>
+      )}
+    </>
   )
 }

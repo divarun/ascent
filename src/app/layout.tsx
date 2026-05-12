@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { Providers } from "@/components/layout/Providers"
 import { BetaBanner } from "@/components/BetaBanner"
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "Ascent — AI Decision Training",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <BetaBanner />
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   )

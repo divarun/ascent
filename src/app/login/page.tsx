@@ -42,10 +42,11 @@ function LoginForm() {
 
   return (
     <div
-      style={{ minHeight: "100vh", background: "#F0EFEB", color: "#1A1814", display: "grid", gridTemplateColumns: "1fr 1fr", fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif" }}
+      className="min-h-screen grid md:grid-cols-2"
+      style={{ background: "#F0EFEB", color: "#1A1814", fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif" }}
     >
       {/* Left: form */}
-      <div style={{ padding: 40, display: "flex", flexDirection: "column" }}>
+      <div className="p-6 sm:p-10 flex flex-col">
         <AscentMark />
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
           <div style={{ width: "100%", maxWidth: 440 }}>
@@ -123,7 +124,7 @@ function LoginForm() {
       </div>
 
       {/* Right: testimonial panel */}
-      <div style={{ padding: 56, background: "#1A1814", color: "#F8F7F5", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div className="hidden md:flex flex-col justify-between" style={{ padding: 56, background: "#1A1814", color: "#F8F7F5" }}>
         <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: "rgba(251,248,242,0.6)", textTransform: "uppercase" }}>
           What you get
         </div>

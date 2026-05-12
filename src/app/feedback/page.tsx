@@ -140,15 +140,15 @@ export default function FeedbackPage() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-background">
-        <header style={{ borderBottom: "1px solid #DDDCD9", padding: "0 56px", height: 52, display: "flex", alignItems: "center" }}>
+        <header className="px-4 sm:px-14 border-b border-border flex items-center" style={{ height: 52 }}>
           <Link href="/" style={{ color: "#1A1814", textDecoration: "none" }}>
             <AscentMark />
           </Link>
         </header>
-        <main className="max-w-5xl mx-auto px-14 py-14 w-full">
+        <main className="max-w-5xl mx-auto px-4 py-8 md:px-14 md:py-14 w-full">
         <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
           <Kicker>Feedback</Kicker>
-          <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
+          <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: "clamp(36px, 8vw, 56px)", lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
             Got it. Thank you.
           </h1>
         </div>
@@ -180,16 +180,16 @@ export default function FeedbackPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header style={{ borderBottom: "1px solid #DDDCD9", padding: "0 56px", height: 52, display: "flex", alignItems: "center" }}>
+      <header className="px-4 sm:px-14 border-b border-border flex items-center" style={{ height: 52 }}>
         <Link href="/" style={{ color: "#1A1814", textDecoration: "none" }}>
           <AscentMark />
         </Link>
       </header>
-      <main className="max-w-5xl mx-auto px-14 py-14 w-full">
+      <main className="max-w-5xl mx-auto px-4 py-8 md:px-14 md:py-14 w-full">
       {/* Page header */}
       <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
         <Kicker>Feedback</Kicker>
-        <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
+        <h1 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: "clamp(36px, 8vw, 56px)", lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", fontWeight: 400 }}>
           Tell us how we are doing.
         </h1>
         <p style={{ marginTop: 24, marginBottom: 0, maxWidth: 640, fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
@@ -197,7 +197,7 @@ export default function FeedbackPage() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 40, alignItems: "start" }}>
+      <div className="grid grid-cols-1 md:grid-cols-[7fr_5fr]" style={{ gap: 40, alignItems: "start" }}>
         {/* Left: form */}
         <div>
           {/* Mood */}
@@ -221,7 +221,7 @@ export default function FeedbackPage() {
 
           {/* Pain points */}
           <Section title="02 — What's been getting in the way?" sub="Pick all that apply.">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+            <div className="grid sm:grid-cols-2" style={{ gap: 8 }}>
               {PAINS.map((p) => {
                 const sel = data.pains.includes(p)
                 return (

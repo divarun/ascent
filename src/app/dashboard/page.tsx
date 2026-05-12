@@ -282,7 +282,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Two-up: next scenario + next module */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 24, marginBottom: 24 }}>
+      <div className="grid grid-cols-1 md:grid-cols-[7fr_5fr]" style={{ gap: 24, marginBottom: 24 }}>
         {nextScenario ? (
           <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F0EFEB" }}>
             <Kicker>Recommended for you — {userRole}</Kicker>
@@ -346,7 +346,7 @@ export default async function DashboardPage() {
       {nextMission && (
         <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F8F7F5", marginBottom: 36 }}>
           <Kicker>Recommended mission — {userRole}</Kicker>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "end" }}>
+          <div className="grid sm:grid-cols-[1fr_auto]" style={{ gap: 20, alignItems: "end" }}>
             <div>
               <h3 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 22, lineHeight: 1.1, color: "#1A1814" }}>
                 {nextMission.title}
@@ -372,15 +372,16 @@ export default async function DashboardPage() {
             {activity.map((item, i) => (
               <div
                 key={item.id}
-                style={{ display: "grid", gridTemplateColumns: "120px 120px 1fr 80px", gap: 20, padding: "14px 0", borderTop: "1px dashed #DDDCD9", alignItems: "center" }}
+                className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[120px_120px_1fr_80px]"
+                style={{ gap: "8px 16px", padding: "14px 0", borderTop: "1px dashed #DDDCD9", alignItems: "center" }}
               >
-                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A" }}>
+                <div className="hidden md:block" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A" }}>
                   {i === 0 ? "Recently" : `${i + 1} items ago`}
                 </div>
                 <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A", textTransform: "uppercase" as const }}>
                   {item.type}
                 </div>
-                <div style={{ fontSize: 14, color: "#1A1814", fontWeight: 500 }}>
+                <div style={{ fontSize: 14, color: "#1A1814", fontWeight: 500, minWidth: 0 }}>
                   <Link href={`/${item.type === "scenario" ? "scenarios" : "missions"}/${item.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
                     {item.title}
                   </Link>

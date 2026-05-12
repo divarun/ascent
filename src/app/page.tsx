@@ -62,7 +62,7 @@ function Kicker({ children }: { children: React.ReactNode }) {
 
 function SectionHead({ kicker, title, lede }: { kicker: string; title: React.ReactNode; lede: string }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 60, alignItems: "end" }}>
+    <div className="grid md:grid-cols-[1fr_1.2fr] gap-8 md:gap-[60px]" style={{ alignItems: "end" }}>
       <div>
         <Kicker>{kicker}</Kicker>
         <h2 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: "clamp(40px, 4.4vw, 60px)", lineHeight: 1, letterSpacing: "-0.01em", color: T.ink, fontWeight: 400 }}>{title}</h2>
@@ -115,7 +115,7 @@ function Ridge() {
 
 const W = "100%"
 const MAX = 1240
-const PAD = "40px"
+const PAD = "clamp(16px, 4vw, 40px)"
 const inner: React.CSSProperties = { maxWidth: MAX, margin: "0 auto", padding: `0 ${PAD}` }
 
 // ── Sections ───────────────────────────────────────────────────────────────
@@ -126,19 +126,19 @@ function Header() {
     <header style={{ borderBottom: `1px solid ${T.line}`, background: T.bg, position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(8px)" }}>
       <div style={{ ...inner, padding: `16px ${PAD}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Mark />
-        <nav style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: 20 }}>
           {[["Foundation", "/learn"], ["Scenarios", "/scenarios"], ["Missions", "/missions"]].map(([label, href]) => (
-            <Link key={label} href={href} style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>{label}</Link>
+            <Link key={label} href={href} className="hidden sm:block" style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>{label}</Link>
           ))}
-          <span style={{ width: 1, height: 18, background: T.line, display: "inline-block" }} />
+          <span className="hidden sm:inline-block" style={{ width: 1, height: 18, background: T.line }} />
           {signedIn ? (
             <>
-              <span style={{ fontSize: 13, color: T.sub }}>{session.user?.name ?? session.user?.email}</span>
+              <span className="hidden sm:block" style={{ fontSize: 13, color: T.sub }}>{session.user?.name ?? session.user?.email}</span>
               <Btn primary href="/dashboard">Dashboard</Btn>
             </>
           ) : (
             <>
-              <Link href="/login" style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>Sign in</Link>
+              <Link href="/login" className="hidden sm:block" style={{ fontSize: 13, color: T.sub, textDecoration: "none" }}>Sign in</Link>
               <Btn primary href="/learn">Start free →</Btn>
             </>
           )}
@@ -181,7 +181,7 @@ function Pillars() {
     <section style={{ borderBottom: `1px solid ${T.line}` }}>
       <div style={{ ...inner, padding: `100px ${PAD}` }}>
         <SectionHead kicker="The shape of the program" title="Three modes. One arc." lede="Read what you need. Decide under pressure. Apply it on your real work. Move between them however suits you." />
-        <div style={{ marginTop: 56, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, borderTop: `1px solid ${T.line}` }}>
+        <div className="grid sm:grid-cols-3" style={{ marginTop: 56, gap: 0, borderTop: `1px solid ${T.line}` }}>
           {PILLARS.map((p, i) => (
             <Link key={p.tag} href={p.href} style={{ display: "block", padding: "32px 32px 36px", borderRight: i < 2 ? `1px solid ${T.line}` : "none", borderBottom: `1px solid ${T.line}`, background: T.bg, textDecoration: "none", transition: "background 140ms" }}
               onMouseEnter={(e) => (e.currentTarget.style.background = T.panel)}
@@ -206,7 +206,7 @@ function LevelsSection() {
     <section style={{ borderBottom: `1px solid ${T.line}` }}>
       <div style={{ ...inner, padding: `100px ${PAD}` }}>
         <SectionHead kicker="The arc" title="Four levels. Earned, not awarded." lede="Progress reflects the decisions you've reasoned through — your position on a defined path from Aware to Leader." />
-        <div style={{ marginTop: 72, position: "relative", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+        <div className="grid sm:grid-cols-2 md:grid-cols-4" style={{ marginTop: 72, position: "relative", gap: 0 }}>
           <div style={{ position: "absolute", left: 0, right: 0, top: 36, height: 1, background: T.line }} />
           {LEVELS.map((l, i) => (
             <div key={l.n} style={{ padding: "0 24px 0 0", position: "relative" }}>
@@ -235,7 +235,7 @@ function AudienceSection() {
     <section style={{ borderBottom: `1px solid ${T.line}` }}>
       <div style={{ ...inner, padding: `100px ${PAD}` }}>
         <SectionHead kicker="Who it's for" title="Three roles. One curriculum that diverges where it should." lede="Foundation is shared. Scenarios, missions, and module emphasis shift to match how your role actually intersects with AI." />
-        <div style={{ marginTop: 64, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3" style={{ marginTop: 64, gap: 24 }}>
           {AUDIENCE_ROLES.map((r) => (
             <div key={r.tag} style={{ padding: 28, border: `1px solid ${T.line}`, background: T.panel, display: "flex", flexDirection: "column", gap: 18 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -261,10 +261,10 @@ function AudienceSection() {
 
 function CTASection() {
   return (
-    <section style={{ borderBottom: `1px solid ${T.line}`, position: "relative", overflow: "hidden" }}>
+    <section style={{ borderBottom: `1px solid ${T.line}`, position: "relative" }}>
       <div style={{ ...inner, padding: `120px ${PAD} 140px`, position: "relative" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 80, alignItems: "end" }}>
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-[7fr_5fr] gap-10 md:gap-[80px]" style={{ alignItems: "end" }}>
+          <div style={{ minWidth: 0 }}>
             <Kicker>Begin the ascent</Kicker>
             <h2 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontSize: "clamp(48px, 6vw, 88px)", lineHeight: 0.98, letterSpacing: "-0.02em", color: T.ink, fontWeight: 400 }}>
               Pick a role.<br /><em style={{ fontStyle: "italic" }}>Open a scenario.</em>
@@ -277,7 +277,7 @@ function CTASection() {
               <Btn href="/signup">Create an account</Btn>
             </div>
           </div>
-          <div style={{ border: `1px solid ${T.line}`, padding: 28, background: T.panel }}>
+          <div style={{ border: `1px solid ${T.line}`, padding: 28, background: T.panel, minWidth: 0 }}>
             <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: T.sub, marginBottom: 16 }}>What an account adds</div>
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {[["Progress", "carried across sessions"], ["Points & levels", "Aware → Leader"], ["Recommendations", "next unfinished content for your role"], ["Recent activity", "last 5 scenarios and missions"]].map(([a, b]) => (
@@ -300,7 +300,7 @@ function CTASection() {
 function Footer() {
   return (
     <footer style={{ background: T.bg }}>
-      <div style={{ ...inner, padding: `44px ${PAD} 56px`, display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 40, alignItems: "start" }}>
+      <div className="grid grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]" style={{ ...inner, padding: `44px ${PAD} 56px`, gap: 40, alignItems: "start" }}>
         <div>
           <Mark />
           <p style={{ marginTop: 16, fontSize: 13.5, color: T.sub, maxWidth: 320, lineHeight: 1.55 }}>

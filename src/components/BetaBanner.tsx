@@ -13,11 +13,13 @@ export function BetaBanner() {
         width: "100%",
         background: "#FFFBEB",
         borderBottom: "1px solid #FDE68A",
-        padding: "7px 20px",
+        padding: "7px 16px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 12,
+        flexWrap: "nowrap",
+        gap: "0 12px",
+        overflow: "hidden",
       }}
     >
       <span
@@ -31,46 +33,65 @@ export function BetaBanner() {
           padding: "2px 7px",
           borderRadius: 3,
           fontWeight: 500,
+          flexShrink: 0,
         }}
       >
         Beta
       </span>
       <span
+        className="hidden sm:inline"
         style={{
           fontFamily: '"JetBrains Mono", monospace',
           fontSize: 11,
           color: "#92400E",
           letterSpacing: "0.02em",
+          whiteSpace: "nowrap",
         }}
       >
         Ascent {appConfig.version} is in early access — you may encounter rough edges.
       </span>
-      <Link
-        href={appConfig.bugReportUrl}
+      <span
+        className="sm:hidden"
         style={{
           fontFamily: '"JetBrains Mono", monospace',
           fontSize: 11,
           color: "#92400E",
-          textDecoration: "underline",
-          textUnderlineOffset: 2,
+          letterSpacing: "0.02em",
           whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
         }}
       >
-        Report a bug →
-      </Link>
-      <Link
-              href={appConfig.feedbackUrl}
-              style={{
-                fontFamily: '"JetBrains Mono", monospace',
-                fontSize: 11,
-                color: "#92400E",
-                textDecoration: "underline",
-                textUnderlineOffset: 2,
-                whiteSpace: "nowrap",
-              }}
-            >
-              Submit Feedback →
-            </Link>
+        Early access — rough edges expected.
+      </span>
+      <div className="hidden sm:flex" style={{ gap: 12, flexShrink: 0 }}>
+        <Link
+          href={appConfig.bugReportUrl}
+          style={{
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: 11,
+            color: "#92400E",
+            textDecoration: "underline",
+            textUnderlineOffset: 2,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Report a bug →
+        </Link>
+        <Link
+          href={appConfig.feedbackUrl}
+          style={{
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: 11,
+            color: "#92400E",
+            textDecoration: "underline",
+            textUnderlineOffset: 2,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Submit Feedback →
+        </Link>
+      </div>
     </div>
   )
 }
