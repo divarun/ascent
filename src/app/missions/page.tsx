@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { AppShell } from "@/components/layout/AppShell"
 import { MissionsList } from "@/components/MissionsList"
 import { sampleMissions } from "@/data/missions"
+import { DIFFICULTY_ORDER } from "@/lib/utils"
 
 export const revalidate = 60
 
@@ -48,7 +49,6 @@ export default async function MissionsPage() {
     }))
   }
 
-  const DIFFICULTY_ORDER: Record<string, number> = { BEGINNER: 0, INTERMEDIATE: 1, ADVANCED: 2 }
   missionList.sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty])
 
   return (
@@ -62,10 +62,10 @@ export default async function MissionsPage() {
           className="m-0 font-normal"
           style={{ fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814" }}
         >
-          Apply it to your work.
+          Exercises on your real work.
         </h1>
         <p className="mt-6 mb-0 max-w-2xl" style={{ fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-          Each mission asks you to complete a concrete task on something you actually own — a workflow, a team, a product area. Submit what you produce.
+          Missions don&apos;t simulate. They ask you to do the thing — on a workflow you actually own — and submit what you wrote. New missions ship on a release schedule.
         </p>
       </div>
 

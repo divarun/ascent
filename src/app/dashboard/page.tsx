@@ -3,18 +3,15 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { AppShell } from "@/components/layout/AppShell"
-import { calculateLevel } from "@/lib/utils"
+import { calculateLevel, getLevelLabel, DIFFICULTY_ORDER } from "@/lib/utils"
+import { SCORING, getPoints } from "@/config/scoring"
 import Link from "next/link"
 import { sampleModules } from "@/data/modules"
 import { sampleScenarios } from "@/data/scenarios"
 import { sampleMissions } from "@/data/missions"
 
-const LEVEL_NAMES = ["", "Aware", "Informed", "Practitioner", "Leader"]
-const LEVEL_PTS = [0, 0, 100, 300, 600]
-const DIFF_ORDER: Record<string, number> = { BEGINNER: 0, INTERMEDIATE: 1, ADVANCED: 2 }
 const DIFF_LABEL: Record<string, string> = { BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced" }
 
-// Challenge → content slugs that directly address that challenge
 const CHALLENGE_SCENARIO_SLUGS: Record<string, string[]> = {
   "evaluating-tools":        ["ai-vendor-evaluation", "build-vs-buy-decision"],
   "understanding-ai":        ["hallucinating-executive-demo", "broken-prompt"],
@@ -81,7 +78,6 @@ const GOAL_MISSION_SLUGS: Record<string, string[]> = {
   "informed-contributor":    ["run-bias-check", "audit-ai-feature"],
 }
 
-// Max difficulty appropriate for each familiarity level
 const FAMILIARITY_MAX_DIFF: Record<string, number> = {
   NONE: 0, BASIC: 0, MODERATE: 1, ADVANCED: 2,
 }
@@ -101,8 +97,8 @@ function sortByChallengeThenDifficulty<T extends { slug: string; difficulty: str
     const aScore = (challengeSlugs.includes(a.slug) ? 2 : 0) + (goalSlugs.has(a.slug) ? 1 : 0)
     const bScore = (challengeSlugs.includes(b.slug) ? 2 : 0) + (goalSlugs.has(b.slug) ? 1 : 0)
     if (aScore !== bScore) return bScore - aScore
-    const aDiff = DIFF_ORDER[a.difficulty] ?? 0
-    const bDiff = DIFF_ORDER[b.difficulty] ?? 0
+    const aDiff = DIFFICULTY_ORDER[a.difficulty] ?? 0
+    const bDiff = DIFFICULTY_ORDER[b.difficulty] ?? 0
     const aFamiliar = aDiff <= maxDiff ? 0 : 1
     const bFamiliar = bDiff <= maxDiff ? 0 : 1
     if (aFamiliar !== bFamiliar) return aFamiliar - bFamiliar
@@ -112,18 +108,10 @@ function sortByChallengeThenDifficulty<T extends { slug: string; difficulty: str
 
 function Kicker({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#65605A", marginBottom: 18 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#65605A" }}>
       <span style={{ width: 16, height: 1, background: "#65605A", display: "inline-block" }} />
       {children}
     </div>
-  )
-}
-
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, padding: "3px 7px", border: "1px solid #DDDCD9", borderRadius: 999, color: "#65605A", lineHeight: 1, whiteSpace: "nowrap" as const }}>
-      {children}
-    </span>
   )
 }
 
@@ -137,13 +125,13 @@ export default async function DashboardPage() {
     db.progress.findUnique({ where: { userId: session.user.id } }),
     db.scenarioAttempt.findMany({
       where: { userId: session.user.id },
-      include: { scenario: { select: { title: true, slug: true } } },
+      include: { scenario: { select: { title: true, slug: true, difficulty: true } } },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
     db.missionSubmission.findMany({
       where: { userId: session.user.id },
-      include: { mission: { select: { title: true, slug: true } } },
+      include: { mission: { select: { title: true, slug: true, difficulty: true } } },
       orderBy: { completedAt: "desc" },
       take: 5,
     }),
@@ -168,27 +156,23 @@ export default async function DashboardPage() {
   const userGoals = (profile.goals ?? []) as string[]
   const currentPoints = progress?.totalPoints ?? 0
   const level = calculateLevel(currentPoints)
-  const levelName = LEVEL_NAMES[level] ?? "Leader"
-  const nextLevelPts = level < 4 ? LEVEL_PTS[level + 1] : 600
+  const levelName = getLevelLabel(level)
+  const nextLevelPts = SCORING.levels.find((l) => l.level === level + 1)?.minPoints
+    ?? SCORING.levels[SCORING.levels.length - 1].minPoints
+  const ptsToNext = nextLevelPts - currentPoints
   const completedModuleIds = progress?.completedModules ?? []
   const completedScenarioIds = progress?.completedScenarios ?? []
   const completedMissionIds = progress?.completedMissions ?? []
 
-  // Modules: role-filtered, difficulty-ordered, first incomplete
   const moduleList = dbModules.length > 0
     ? dbModules.map(m => ({ slug: m.slug, title: m.title, summary: m.summary, difficulty: m.difficulty, roles: m.roles as string[], done: completedModuleIds.includes(m.id) }))
     : sampleModules.filter(m => m.enabled).map(m => ({ slug: m.slug, title: m.title, summary: m.summary, difficulty: m.difficulty, roles: [...m.roles] as string[], done: completedModuleIds.includes(m.slug) }))
 
   const nextModule = sortByChallengeThenDifficulty(
     moduleList.filter(m => m.roles.includes(userRole) && !m.done),
-    biggestChallenge,
-    CHALLENGE_MODULE_SLUGS,
-    aiFamiliarity,
-    userGoals,
-    GOAL_MODULE_SLUGS,
+    biggestChallenge, CHALLENGE_MODULE_SLUGS, aiFamiliarity, userGoals, GOAL_MODULE_SLUGS,
   )[0] ?? null
 
-  // Scenarios: role-filtered, challenge-aware, first incomplete
   const scenarioList = dbScenarios.length > 0
     ? dbScenarios
     : sampleScenarios.filter(s => s.enabled).map(s => ({ id: s.slug, slug: s.slug, title: s.title, summary: s.summary, roles: [...s.roles] as string[], difficulty: s.difficulty }))
@@ -196,189 +180,191 @@ export default async function DashboardPage() {
   const nextScenario = sortByChallengeThenDifficulty(
     (scenarioList as Array<{ id: string; slug: string; title: string; summary: string; roles: string[]; difficulty: string }>)
       .filter(s => s.roles.includes(userRole) && !completedScenarioIds.includes(s.id)),
-    biggestChallenge,
-    CHALLENGE_SCENARIO_SLUGS,
-    aiFamiliarity,
-    userGoals,
-    GOAL_SCENARIO_SLUGS,
+    biggestChallenge, CHALLENGE_SCENARIO_SLUGS, aiFamiliarity, userGoals, GOAL_SCENARIO_SLUGS,
   )[0] ?? null
 
-  // Missions: role-filtered, challenge-aware, first incomplete
   const missionList = dbMissions.length > 0
     ? dbMissions.map(m => ({ id: m.id, slug: m.slug, title: m.title, description: m.description, roles: m.roles as string[], difficulty: m.difficulty, done: completedMissionIds.includes(m.id) }))
     : sampleMissions.filter(m => m.enabled).map(m => ({ id: m.slug, slug: m.slug, title: m.title, description: m.description ?? "", roles: [...m.roles] as string[], difficulty: m.difficulty, done: completedMissionIds.includes(m.slug) }))
 
   const nextMission = sortByChallengeThenDifficulty(
     missionList.filter(m => m.roles.includes(userRole) && !m.done),
-    biggestChallenge,
-    CHALLENGE_MISSION_SLUGS,
-    aiFamiliarity,
-    userGoals,
-    GOAL_MISSION_SLUGS,
+    biggestChallenge, CHALLENGE_MISSION_SLUGS, aiFamiliarity, userGoals, GOAL_MISSION_SLUGS,
   )[0] ?? null
 
-  // Combined recent activity
+  // Full scenario data (with prompts) from sampleScenarios for the hero
+  const fullNextScenario = nextScenario
+    ? sampleScenarios.find(s => s.slug === nextScenario.slug) ?? null
+    : null
+
   type ActivityItem = { id: string; type: "scenario" | "mission"; title: string; slug: string; score: number | null; points: number; date: Date }
   const activity: ActivityItem[] = [
-    ...recentScenarios.map(a => ({ id: a.id, type: "scenario" as const, title: a.scenario.title, slug: a.scenario.slug, score: a.score, points: a.score !== null ? 50 : 0, date: a.createdAt })),
-    ...recentMissions.map(m => ({ id: m.id, type: "mission" as const, title: m.mission.title, slug: m.mission.slug, score: null, points: 40, date: m.completedAt })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5)
+    ...recentScenarios.map(a => ({ id: a.id, type: "scenario" as const, title: a.scenario.title, slug: a.scenario.slug, score: a.score, points: a.score !== null ? getPoints("scenario", a.scenario.difficulty) : 0, date: a.createdAt })),
+    ...recentMissions.map(m => ({ id: m.id, type: "mission" as const, title: m.mission.title, slug: m.mission.slug, score: null, points: getPoints("mission", m.mission.difficulty), date: m.completedAt })),
+  ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 4)
 
-  // Level track markers
-  const trackTicks = [
-    { label: "L01 · 0",   pct: 0 },
-    { label: "L02 · 100", pct: (100 / 600) * 100 },
-    { label: "L03 · 300", pct: (300 / 600) * 100 },
-    { label: "L04 · 600", pct: 100 },
-  ]
-  const fillPct = Math.min(100, (currentPoints / 600) * 100)
   const userName = user?.name?.split(" ")[0] ?? "there"
+
+  // Ridge bar visual for compact strip (proportional fill)
+  const ridgeHeights = [4, 6, 8, 10, 12, 14, 16, 18, 14, 10, 6, 10, 14, 18, 16, 12]
+  const fillBars = Math.round((currentPoints / (nextLevelPts || 600)) * ridgeHeights.length)
 
   return (
     <AppShell>
       {/* Page header */}
-      <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 36, marginBottom: 36 }}>
-        <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: "#65605A", display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-          <span style={{ width: 16, height: 1, background: "#65605A", display: "inline-block" }} />
-          Dashboard
-        </div>
-        <h1 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814" }}>
-          Welcome back, {userName}.
+      <div style={{ borderBottom: "1px solid #DDDCD9", paddingBottom: 24, marginBottom: 24 }}>
+        <Kicker>Dashboard · {userRole}</Kicker>
+        <h1 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 44, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814", marginTop: 18 }}>
+          A decision is waiting.
         </h1>
-        {level < 4 && (
-          <p className="mt-6 mb-0" style={{ fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-            You&apos;re {nextLevelPts - currentPoints} points from L0{level + 1} — {LEVEL_NAMES[level + 1]}.
-          </p>
-        )}
+        <p style={{ marginTop: 14, marginBottom: 0, fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
+          {level < 4
+            ? `Pick one up. You're ${ptsToNext} point${ptsToNext === 1 ? "" : "s"} from ${getLevelLabel(level + 1)} — but that's not the point. The reps are.`
+            : `You've reached Leader. Keep going — new content is added regularly.`}
+        </p>
       </div>
 
-      {/* Progress strip */}
-      <div style={{ border: "1px solid #DDDCD9", background: "#F8F7F5", padding: 28, marginBottom: 36 }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 22 }}>
-          <div>
-            <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: "#65605A", marginBottom: 6 }}>
-              L0{level} · {levelName.toUpperCase()}
-            </div>
-            <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 36, lineHeight: 1.05, color: "#1A1814", whiteSpace: "nowrap" }}>
-              {level < 4 ? `${currentPoints} / ${nextLevelPts} pts` : `${currentPoints} pts`}
-            </div>
-          </div>
-          {level < 4 && (
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: "#65605A", marginBottom: 6 }}>NEXT</div>
-              <div style={{ fontSize: 14, color: "#1A1814" }}>L0{level + 1} · {LEVEL_NAMES[level + 1]}</div>
-            </div>
-          )}
-        </div>
-        <div style={{ position: "relative", height: 4, background: "#DDDCD9", borderRadius: 2, marginBottom: 10 }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: 4, width: `${fillPct}%`, background: "#1A1814", borderRadius: 2 }} />
-          {trackTicks.map((tick, i) => (
-            <div key={i} style={{ position: "absolute", left: `${tick.pct}%`, top: -4, width: 12, height: 12, marginLeft: -6, borderRadius: 999, background: tick.pct <= fillPct ? "#1A1814" : "#F0EFEB", border: tick.pct <= fillPct ? "1.5px solid #1A1814" : "1.5px dashed #8A857E" }} />
+      {/* Compact status strip */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "14px 20px",
+        border: "1px solid #DDDCD9",
+        background: "#F8F7F5",
+        marginBottom: 24,
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: 11,
+        letterSpacing: "0.12em",
+        color: "#65605A",
+        textTransform: "uppercase",
+        gap: 16,
+        flexWrap: "wrap" as const,
+      }}>
+        <span><strong style={{ color: "#1A1814" }}>L0{level}</strong> · {levelName}</span>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 18 }} aria-hidden>
+          {ridgeHeights.map((h, i) => (
+            <span key={i} style={{
+              display: "block",
+              width: 4,
+              height: h,
+              background: i < fillBars ? "#1A1814" : "#DDDCD9",
+              borderRadius: 1,
+            }} />
           ))}
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A" }}>
-          {trackTicks.map(tick => <span key={tick.label}>{tick.label}</span>)}
-        </div>
+        <span>
+          {currentPoints} <strong style={{ color: "#1A1814" }}>/ {nextLevelPts} PTS</strong>
+          {level < 4 && ` · ${ptsToNext} to ${getLevelLabel(level + 1)} →`}
+        </span>
       </div>
 
-      {/* Two-up: next scenario + next module */}
-      <div className="grid grid-cols-1 md:grid-cols-[7fr_5fr]" style={{ gap: 24, marginBottom: 24 }}>
-        {nextScenario ? (
-          <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F0EFEB" }}>
-            <Kicker>Recommended for you — {userRole}</Kicker>
-            <h2 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 28, lineHeight: 1.05, color: "#1A1814" }}>
-              {nextScenario.title}
-            </h2>
-            <p style={{ marginTop: 14, color: "#65605A", fontSize: 14, lineHeight: 1.55 }}>{nextScenario.summary}</p>
-            <div style={{ marginTop: 18, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A" }}>
-              SCENARIO · {nextScenario.roles.join("/")} · {DIFF_LABEL[nextScenario.difficulty] ?? nextScenario.difficulty}
-            </div>
-            <div style={{ marginTop: 22 }}>
-              <Link href={`/scenarios/${nextScenario.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", background: "#1A1814", color: "#F8F7F5", borderRadius: 4, fontSize: 13.5, fontWeight: 500, textDecoration: "none" }}>
-                Start scenario →
-              </Link>
-            </div>
+      {/* Decision-forward hero scenario */}
+      {nextScenario && (
+        <div style={{
+          border: "1px solid #1A1814",
+          background: "#F8F7F5",
+          padding: "40px 44px 36px",
+          position: "relative",
+          marginBottom: 28,
+        }}>
+          <div style={{ position: "absolute", left: -1, top: -1, bottom: -1, width: 3, background: "#1A1814" }} />
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: "#65605A", textTransform: "uppercase" }}>
+            <span>— Recommended scenario · for you</span>
+            <span>{nextScenario.roles.join("/")} · {DIFF_LABEL[nextScenario.difficulty] ?? nextScenario.difficulty}</span>
           </div>
-        ) : (
-          <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F0EFEB" }}>
-            <Kicker>Scenarios</Kicker>
-            <h2 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 28, lineHeight: 1.05, color: "#1A1814" }}>
-              All {userRole} scenarios complete.
-            </h2>
-            <p style={{ marginTop: 14, color: "#65605A", fontSize: 14, lineHeight: 1.55 }}>New scenarios are added regularly. Check back soon.</p>
-            <div style={{ marginTop: 22 }}>
-              <Link href="/scenarios" style={{ fontSize: 13.5, color: "#65605A", textDecoration: "none" }}>Browse all scenarios →</Link>
-            </div>
+          <h2 style={{ margin: 0, fontFamily: '"Instrument Serif", serif', fontWeight: 400, fontSize: 44, lineHeight: 1.04, letterSpacing: "-0.02em", color: "#1A1814" }}>
+            {nextScenario.title}
+          </h2>
+          <div style={{ marginTop: 18, padding: "16px 20px", background: "#F0EFEB", borderLeft: "2px solid #1A1814", fontSize: 14.5, lineHeight: 1.6, color: "#1A1814", maxWidth: 680 }}>
+            <em style={{ fontStyle: "italic", color: "#65605A" }}>The situation — </em>
+            {nextScenario.summary}
           </div>
-        )}
-
-        {nextModule ? (
-          <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F8F7F5" }}>
-            <Kicker>Recommended module — {userRole}</Kicker>
-            <h3 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 22, lineHeight: 1.1, color: "#1A1814" }}>
-              {nextModule.title}
-            </h3>
-            <p style={{ marginTop: 12, fontSize: 13.5, color: "#65605A", lineHeight: 1.55 }}>{nextModule.summary}</p>
-            <div style={{ marginTop: 16, display: "flex", gap: 6, flexWrap: "wrap" as const }}>
-              <Pill>{DIFF_LABEL[nextModule.difficulty] ?? nextModule.difficulty}</Pill>
+          {fullNextScenario?.prompts && fullNextScenario.prompts.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3" style={{ marginTop: 24, gap: 18, borderTop: "1px dashed #DDDCD9", paddingTop: 20 }}>
+              {fullNextScenario.prompts.slice(0, 3).map((p, i) => (
+                <div key={p.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", color: "#65605A", textTransform: "uppercase" }}>Prompt 0{i + 1}</span>
+                  <span style={{ fontSize: 13.5, lineHeight: 1.45, color: "#1A1814" }}>{p.question}</span>
+                </div>
+              ))}
             </div>
-            <div style={{ marginTop: 20 }}>
-              <Link href={`/learn/${nextModule.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "transparent", color: "#1A1814", borderRadius: 4, fontSize: 13.5, fontWeight: 500, textDecoration: "none", border: "1px solid #DDDCD9" }}>
-                Open module →
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F8F7F5" }}>
-            <Kicker>Modules</Kicker>
-            <h3 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 22, lineHeight: 1.1, color: "#1A1814" }}>
-              All {userRole} modules complete.
-            </h3>
-            <p style={{ marginTop: 12, fontSize: 13.5, color: "#65605A", lineHeight: 1.55 }}>New content is added regularly.</p>
-            <div style={{ marginTop: 20 }}>
-              <Link href="/learn" style={{ fontSize: 13.5, color: "#65605A", textDecoration: "none" }}>Browse all modules →</Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Next mission */}
-      {nextMission && (
-        <div style={{ border: "1px solid #DDDCD9", padding: 28, background: "#F8F7F5", marginBottom: 36 }}>
-          <Kicker>Recommended mission — {userRole}</Kicker>
-          <div className="grid sm:grid-cols-[1fr_auto]" style={{ gap: 20, alignItems: "end" }}>
-            <div>
-              <h3 className="m-0 font-normal" style={{ fontFamily: '"Instrument Serif", serif', fontSize: 22, lineHeight: 1.1, color: "#1A1814" }}>
-                {nextMission.title}
-              </h3>
-              <p style={{ marginTop: 10, fontSize: 13.5, color: "#65605A", lineHeight: 1.55 }}>{nextMission.description}</p>
-              <div style={{ marginTop: 12, display: "flex", gap: 6 }}>
-                <Pill>{DIFF_LABEL[nextMission.difficulty] ?? nextMission.difficulty}</Pill>
-                <Pill>Mission · +40 pts</Pill>
-              </div>
-            </div>
-            <Link href={`/missions/${nextMission.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "transparent", color: "#1A1814", borderRadius: 4, fontSize: 13.5, fontWeight: 500, textDecoration: "none", border: "1px solid #DDDCD9", whiteSpace: "nowrap" as const }}>
-              Open mission →
+          )}
+          <div style={{ marginTop: 26, display: "flex", alignItems: "center", gap: 14 }}>
+            <Link href={`/scenarios/${nextScenario.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 22px", background: "#1A1814", color: "#F8F7F5", borderRadius: 4, fontSize: 13.5, fontWeight: 500, textDecoration: "none" }}>
+              Open scenario →
             </Link>
+            <span style={{ fontSize: 12.5, color: "#65605A", maxWidth: 380, lineHeight: 1.5 }}>
+              Picked for your role as {userRole}.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 3-column queue */}
+      {(nextModule || nextMission) && (
+        <div className="grid grid-cols-1 md:grid-cols-3" style={{ border: "1px solid #DDDCD9", background: "#F0EFEB", marginBottom: 28 }}>
+          {nextModule ? (
+            <Link href={`/learn/${nextModule.slug}`} className="border-b md:border-b-0 md:border-r border-border" style={{ padding: "22px 22px", textDecoration: "none", display: "block" }}>
+              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#65605A", marginBottom: 10 }}>— Up next module</div>
+              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 20, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1A1814", marginBottom: 8 }}>{nextModule.title}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.5, color: "#65605A", marginBottom: 14, minHeight: 38 }}>{nextModule.summary}</div>
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#1A1814", textTransform: "uppercase" }}>Open module →</span>
+            </Link>
+          ) : (
+            <Link href="/learn" className="border-b md:border-b-0 md:border-r border-border" style={{ padding: "22px 22px", textDecoration: "none", display: "block" }}>
+              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#65605A", marginBottom: 10 }}>— Modules</div>
+              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 20, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1A1814", marginBottom: 8 }}>All {userRole} modules complete.</div>
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textTransform: "uppercase" }}>Browse all →</span>
+            </Link>
+          )}
+          {nextMission ? (
+            <Link href={`/missions/${nextMission.slug}`} className="border-b md:border-b-0 md:border-r border-border" style={{ padding: "22px 22px", textDecoration: "none", display: "block" }}>
+              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#65605A", marginBottom: 10 }}>— Next mission</div>
+              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 20, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1A1814", marginBottom: 8 }}>{nextMission.title}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.5, color: "#65605A", marginBottom: 14, minHeight: 38 }}>{nextMission.description}</div>
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#1A1814", textTransform: "uppercase" }}>+{getPoints("mission", nextMission.difficulty)} pts · open →</span>
+            </Link>
+          ) : (
+            <Link href="/missions" className="border-b md:border-b-0 md:border-r border-border" style={{ padding: "22px 22px", textDecoration: "none", display: "block" }}>
+              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#65605A", marginBottom: 10 }}>— Missions</div>
+              <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 20, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1A1814", marginBottom: 8 }}>All {userRole} missions complete.</div>
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textTransform: "uppercase" }}>Browse all →</span>
+            </Link>
+          )}
+          {/* Third column: browse links */}
+          <div style={{ padding: "22px 22px" }}>
+            <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#65605A", marginBottom: 10 }}>— Browse all</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                { label: "Foundation", href: "/learn" },
+                { label: "Scenarios", href: "/scenarios" },
+                { label: "Missions", href: "/missions" },
+              ].map(({ label, href }) => (
+                <Link key={label} href={href} style={{ fontFamily: '"Instrument Serif", serif', fontSize: 18, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1A1814", textDecoration: "none" }}>
+                  {label} →
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* Recent activity */}
       {activity.length > 0 && (
-        <div style={{ border: "1px solid #DDDCD9", background: "#F0EFEB", padding: 28 }}>
-          <Kicker>Recent activity</Kicker>
-          <div>
+        <div style={{ border: "1px solid #DDDCD9", background: "#F0EFEB", padding: "22px 24px" }}>
+          <Kicker>Recent activity · last {activity.length}</Kicker>
+          <div style={{ marginTop: 8 }}>
             {activity.map((item, i) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[120px_120px_1fr_80px]"
-                style={{ gap: "8px 16px", padding: "14px 0", borderTop: "1px dashed #DDDCD9", alignItems: "center" }}
+                className="grid [grid-template-columns:1fr_80px] md:[grid-template-columns:120px_120px_1fr_80px]"
+                style={{ gap: 20, padding: "14px 0", borderTop: "1px dashed #DDDCD9", alignItems: "center" }}
               >
                 <div className="hidden md:block" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A" }}>
-                  {i === 0 ? "Recently" : `${i + 1} items ago`}
+                  {i === 0 ? "RECENTLY" : `${i + 1} ITEMS AGO`}
                 </div>
-                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A", textTransform: "uppercase" as const }}>
+                <div className="hidden md:block" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.08em", color: "#65605A", textTransform: "uppercase" }}>
                   {item.type}
                 </div>
                 <div style={{ fontSize: 14, color: "#1A1814", fontWeight: 500, minWidth: 0 }}>

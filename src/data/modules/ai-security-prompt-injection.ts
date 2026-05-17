@@ -4,7 +4,7 @@ export const aiSecurityPromptInjection = {
   summary:
     "The attack surface that comes with building on LLMs — prompt injection, jailbreaks, data exfiltration, supply chain attacks, and what defenses actually work.",
   difficulty: "INTERMEDIATE" as const,
-  roles: ["EM", "IC"] as const,
+  roles: ["PM", "EM", "IC"] as const,
   tags: ["security", "prompt-injection", "risk", "engineering"],
   order: 15,
   content: `## AI Security & Prompt Injection
@@ -86,6 +86,8 @@ A category often overlooked by teams focused on runtime attacks:
 **Third-party tool and plugin attacks:** Agents that call external APIs or use third-party plugins are trusting those integrations. A compromised plugin can return injection payloads in its outputs, which your agent processes as legitimate tool results. Treat third-party tool outputs as untrusted, just as you'd treat user inputs.
 
 **Prompt template libraries:** Copy-pasted prompt templates from community sources may contain subtle instructions that benefit the original author. Review external prompts before production use.
+
+**Case study — Amazon Q (2025):** Amazon's enterprise AI assistant Q Business was found to be surfacing information from documents that users didn't have access to. The retrieval and context injection layer didn't properly enforce document-level access controls, so the AI leaked confidential internal information across organizational permission boundaries. No attacker was required — the vulnerability was architectural: the system treated document content as trusted input without verifying the requesting user's access rights. This is a canonical example of data leakage through model outputs that isn't classified as an "attack" in the traditional sense but has the same consequences. The lesson: when your AI system retrieves and injects documents into prompts, document-level access controls must be enforced before retrieval, not after — the model itself cannot be trusted to redact content it wasn't supposed to see.
 
 ### Multimodal Injection
 

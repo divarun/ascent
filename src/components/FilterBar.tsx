@@ -1,33 +1,47 @@
 "use client"
 
 const ROLE_OPTIONS = ["ALL", "PM", "EM", "IC"] as const
-const DIFF_OPTIONS = [
-  ["ALL", "All"],
-  ["BEGINNER", "Beginner"],
-  ["INTERMEDIATE", "Intermediate"],
-  ["ADVANCED", "Advanced"],
-] as const
 
 interface FilterBarProps {
   role: string
-  difficulty: string
   showRoleFilter: boolean
-  showDiffFilter: boolean
   onRoleChange: (r: string) => void
-  onDifficultyChange: (d: string) => void
 }
 
-const chipStyle = (active: boolean): React.CSSProperties => ({
-  fontFamily: '"JetBrains Mono", monospace',
-  fontSize: 11,
-  letterSpacing: "0.1em",
-  padding: "6px 12px",
-  borderRadius: 999,
-  border: `1px solid ${active ? "#1A1814" : "#DDDCD9"}`,
-  background: active ? "#1A1814" : "transparent",
-  color: active ? "#F8F7F5" : "#65605A",
-  cursor: "pointer",
-})
+const ROLE_ACTIVE: Record<string, { bg: string; border: string }> = {
+  PM:  { bg: "#3A4A6B", border: "#3A4A6B" },
+  EM:  { bg: "#6B4A3A", border: "#6B4A3A" },
+  IC:  { bg: "#1A1814", border: "#1A1814" },
+  ALL: { bg: "#1A1814", border: "#1A1814" },
+}
+
+function chipStyle(active: boolean, key: string): React.CSSProperties {
+  if (active) {
+    const c = ROLE_ACTIVE[key] ?? ROLE_ACTIVE.ALL
+    return {
+      fontFamily: '"JetBrains Mono", monospace',
+      fontSize: 11,
+      letterSpacing: "0.1em",
+      padding: "6px 12px",
+      borderRadius: 999,
+      border: `1px solid ${c.border}`,
+      background: c.bg,
+      color: "#F8F7F5",
+      cursor: "pointer",
+    }
+  }
+  return {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontSize: 11,
+    letterSpacing: "0.1em",
+    padding: "6px 12px",
+    borderRadius: 999,
+    border: "1px solid #DDDCD9",
+    background: "transparent",
+    color: "#65605A",
+    cursor: "pointer",
+  }
+}
 
 const rowLabel: React.CSSProperties = {
   fontFamily: '"JetBrains Mono", monospace',
@@ -38,27 +52,15 @@ const rowLabel: React.CSSProperties = {
   flexShrink: 0,
 }
 
-export function FilterBar({ role, difficulty, showRoleFilter, showDiffFilter, onRoleChange, onDifficultyChange }: FilterBarProps) {
-  if (!showRoleFilter && !showDiffFilter) return null
+export function FilterBar({ role, showRoleFilter, onRoleChange }: FilterBarProps) {
+  if (!showRoleFilter) return null
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 32 }}>
-      {showRoleFilter && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={rowLabel}>ROLE /</span>
-          {ROLE_OPTIONS.map(r => (
-            <button key={r} onClick={() => onRoleChange(r)} style={chipStyle(role === r)}>{r}</button>
-          ))}
-        </div>
-      )}
-      {showDiffFilter && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={rowLabel}>LEVEL /</span>
-          {DIFF_OPTIONS.map(([val, label]) => (
-            <button key={val} onClick={() => onDifficultyChange(val)} style={chipStyle(difficulty === val)}>{label}</button>
-          ))}
-        </div>
-      )}
+    <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 20, borderBottom: "1px solid #DDDCD9", marginBottom: 0 }}>
+      <span style={rowLabel}>FILTER /</span>
+      {ROLE_OPTIONS.map(r => (
+        <button key={r} onClick={() => onRoleChange(r)} style={chipStyle(role === r, r)}>{r}</button>
+      ))}
     </div>
   )
 }

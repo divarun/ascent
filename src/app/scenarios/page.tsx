@@ -50,10 +50,10 @@ export default async function ScenariosPage() {
           className="m-0 font-normal"
           style={{ fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814" }}
         >
-          Work through the decisions.
+          Decisions to make.
         </h1>
         <p className="mt-6 mb-0 max-w-2xl" style={{ fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-          Each scenario presents a realistic situation with a few prompts. Write your response, then review the feedback on what you addressed and what you missed.
+          Each scenario is a real situation, three prompts, and direct feedback. Pick one. Write your call as if it were tomorrow. New cases land on a schedule.
         </p>
       </div>
 

@@ -15,137 +15,174 @@ type Mission = {
   completed: boolean
 }
 
-const diffLabel: Record<string, string> = {
-  BEGINNER: "Beginner",
-  INTERMEDIATE: "Intermediate",
-  ADVANCED: "Advanced",
+const TIER_ORDER = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const
+
+const TIER_META: Record<string, { code: string; name: string }> = {
+  BEGINNER:     { code: "T01", name: "Beginner" },
+  INTERMEDIATE: { code: "T02", name: "Intermediate" },
+  ADVANCED:     { code: "T03", name: "Advanced" },
 }
 
-function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "warn" | "default" }) {
-  const colors =
-    tone === "good" ? { border: "#2C5F4F", color: "#2C5F4F" } :
-    tone === "warn" ? { border: "#A65A2E", color: "#A65A2E" } :
-                      { border: "#DDDCD9",  color: "#65605A" }
+function Checkbox({ checked, locked }: { checked: boolean; locked?: boolean }) {
   return (
-    <span
-      style={{
-        fontFamily: '"JetBrains Mono", monospace',
-        fontSize: 10.5,
-        letterSpacing: "0.08em",
-        textTransform: "uppercase" as const,
-        padding: "3px 7px",
-        border: `1px solid ${colors.border}`,
-        borderRadius: 999,
-        color: colors.color,
-        background: "transparent",
-        lineHeight: 1,
-        whiteSpace: "nowrap" as const,
-      }}
-    >
-      {children}
-    </span>
+    <div style={{
+      width: 14,
+      height: 14,
+      border: `1.4px solid ${checked ? "#2C5F4F" : "#8A857E"}`,
+      borderRadius: 3,
+      background: checked ? "#2C5F4F" : "transparent",
+      position: "relative",
+      flexShrink: 0,
+      opacity: locked ? 0.4 : 1,
+    }}>
+      {checked && (
+        <div style={{
+          position: "absolute",
+          left: 3,
+          top: 0,
+          width: 4,
+          height: 8,
+          border: "solid #fff",
+          borderWidth: "0 1.6px 1.6px 0",
+          transform: "rotate(45deg)",
+        }} />
+      )}
+    </div>
   )
 }
 
 export function MissionsList({ missions, isGuest }: { missions: Mission[]; isGuest: boolean }) {
-  const { role, difficulty, selectRole, selectDifficulty, resetAll, visible, showRoleFilter, showDiffFilter, mounted } = useContentFilters(missions)
+  const { role, selectRole, resetAll, visible, showRoleFilter, mounted } = useContentFilters(missions)
 
   if (!mounted) return null
+
+  // Group by difficulty, preserving order
+  const grouped: Record<string, Mission[]> = { BEGINNER: [], INTERMEDIATE: [], ADVANCED: [] }
+  visible.forEach(m => {
+    const tier = m.difficulty in grouped ? m.difficulty : "BEGINNER"
+    grouped[tier].push(m)
+  })
+
+  // Global M## codes across all missions
+  let mGlobal = 0
+  const missionCodes: Record<string, string> = {}
+  missions.forEach(m => {
+    mGlobal++
+    missionCodes[m.id] = `M${String(mGlobal).padStart(2, "0")}`
+  })
+
+  const submittedCount = visible.filter(m => m.completed).length
+  const hasAny = visible.length > 0
 
   return (
     <div>
       <FilterBar
         role={role}
-        difficulty={difficulty}
         showRoleFilter={showRoleFilter}
-        showDiffFilter={showDiffFilter}
         onRoleChange={selectRole}
-        onDifficultyChange={selectDifficulty}
       />
 
-      <div className="flex flex-col border-t border-border">
-        {visible.map((m, i) => {
-          const locked = isGuest && !GUEST_MISSIONS.has(m.slug)
-          const rowStyle: React.CSSProperties = {
-            display: "grid",
-            gridTemplateColumns: "auto 1fr auto",
-            gap: 32,
-            alignItems: "center",
-            padding: "24px 8px",
-            borderBottom: "1px solid #E5E4E0",
-            color: "#1A1814",
-          }
-          const inner = locked ? (
-            <>
-              <div style={{ width: 60, fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "#65605A", letterSpacing: "0.06em" }}>
-                M{String(i + 1).padStart(2, "0")}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="font-medium" style={{ fontSize: 17 }}>{m.title}</span>
-                </div>
-                <div className="mb-2" style={{ fontSize: 13.5, color: "#65605A", lineHeight: 1.5 }}>{m.description}</div>
-                <div className="flex gap-1.5">
-                  <Pill>{m.roles.join("/")}</Pill>
-                  <Pill>{diffLabel[m.difficulty] ?? m.difficulty}</Pill>
-                </div>
-                <div style={{ marginTop: 8, fontSize: 12.5, color: "#65605A" }}>
-                  Free account required to attempt this mission →
-                </div>
-              </div>
-              <div style={{ fontSize: 13, color: "#65605A" }}>Create account</div>
-            </>
-          ) : (
-            <>
-              <div style={{ width: 60, fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "#65605A", letterSpacing: "0.06em" }}>
-                M{String(i + 1).padStart(2, "0")}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="font-medium" style={{ fontSize: 17 }}>{m.title}</span>
-                  {m.completed && <Pill tone="good">✓ submitted</Pill>}
-                </div>
-                <div className="mb-2" style={{ fontSize: 13.5, color: "#65605A", lineHeight: 1.5 }}>{m.description}</div>
-                <div className="flex gap-1.5">
-                  <Pill>{m.roles.join("/")}</Pill>
-                  <Pill>{diffLabel[m.difficulty] ?? m.difficulty}</Pill>
-                </div>
-              </div>
-              <div style={{ color: "#65605A", fontSize: 14 }}>→</div>
-            </>
-          )
-          return locked ? (
-            <Link
-              key={m.id}
-              href="/signup"
-              className="no-underline transition-colors duration-150"
-              style={rowStyle}
-              onMouseEnter={e => (e.currentTarget.style.background = "#F0EFEB")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              {inner}
-            </Link>
-          ) : (
-            <Link
-              key={m.id}
-              href={`/missions/${m.slug}`}
-              className="no-underline transition-colors duration-150"
-              style={rowStyle}
-              onMouseEnter={e => (e.currentTarget.style.background = "#E8E6E1")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              {inner}
-            </Link>
-          )
-        })}
+      {hasAny && (
+        <div style={{
+          display: "flex",
+          gap: 18,
+          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: 11,
+          letterSpacing: "0.1em",
+          color: "#65605A",
+          textTransform: "uppercase",
+          padding: "14px 0 22px",
+          borderBottom: "1px solid #DDDCD9",
+          marginBottom: 14,
+          flexWrap: "wrap",
+        }}>
+          <span><strong style={{ color: "#1A1814" }}>{submittedCount}</strong> submitted</span>
+          <span><strong style={{ color: "#1A1814" }}>{visible.length - submittedCount}</strong> queued</span>
+          <span style={{ marginLeft: "auto" }}>+40 pts per submission</span>
+        </div>
+      )}
 
-        {visible.length === 0 && (
-          <div className="py-12 text-center" style={{ color: "#65605A", fontSize: 14 }}>
-            No missions match those filters.{" "}
-            <button onClick={resetAll} className="underline hover:no-underline">Show all</button>
-          </div>
-        )}
-      </div>
+      {!hasAny ? (
+        <div className="py-12 text-center" style={{ color: "#65605A", fontSize: 14 }}>
+          No missions match those filters.{" "}
+          <button onClick={resetAll} className="underline hover:no-underline">Show all</button>
+        </div>
+      ) : (
+        TIER_ORDER.map(tier => {
+          const items = grouped[tier]
+          if (items.length === 0) return null
+          const meta = TIER_META[tier]
+          return (
+            <div key={tier} style={{ marginBottom: 22 }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                padding: "10px 0 12px",
+                borderBottom: "1px solid #1A1814",
+                marginBottom: 0,
+              }}>
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: "#65605A", textTransform: "uppercase" }}>{meta.code}</span>
+                <span style={{ fontFamily: '"Instrument Serif", serif', fontSize: 22, lineHeight: 1, letterSpacing: "-0.01em", color: "#1A1814" }}>{meta.name}</span>
+              </div>
+              {items.map(m => {
+                const locked = isGuest && !GUEST_MISSIONS.has(m.slug)
+                const code = missionCodes[m.id] ?? ""
+                const rowClass = "no-underline grid items-center [grid-template-columns:24px_1fr_auto] md:[grid-template-columns:24px_48px_1fr_auto]"
+                const rowStyle: React.CSSProperties = {
+                  gap: 12,
+                  padding: "16px 4px",
+                  borderBottom: "1px solid #E5E4E0",
+                  color: "#1A1814",
+                }
+                return locked ? (
+                  <Link
+                    key={m.id}
+                    href="/signup"
+                    className={rowClass}
+                    style={{ ...rowStyle, opacity: 0.7 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#F0EFEB")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <Checkbox checked={false} locked />
+                    <span className="hidden md:inline" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A" }}>{code}</span>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 500, color: "#65605A", marginBottom: 4 }}>{m.title}</div>
+                      <div style={{ fontSize: 13, color: "#A09890", lineHeight: 1.5, maxWidth: 580 }}>Account required to attempt this mission.</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                      <span>{m.roles.join("/")}</span>
+                      <span style={{ color: "#1A1814" }}>→</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <Link
+                    key={m.id}
+                    href={`/missions/${m.slug}`}
+                    className={rowClass}
+                    style={rowStyle}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#E8E6E1")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <Checkbox checked={m.completed} />
+                    <span className="hidden md:inline" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A" }}>{code}</span>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 500, color: m.completed ? "#65605A" : "#1A1814", marginBottom: 4, textDecoration: m.completed ? "line-through" : "none", textDecorationColor: "#B0ABA3" }}>{m.title}</div>
+                      <div style={{ fontSize: 13, color: "#65605A", lineHeight: 1.5, maxWidth: 580 }}>{m.description}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                      <span>{m.roles.join("/")}</span>
+                      {!m.completed && <span style={{ color: "#65605A" }}>+40</span>}
+                      {m.completed && <span style={{ color: "#2C5F4F" }}>DONE</span>}
+                      <span style={{ color: "#1A1814" }}>→</span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )
+        })
+      )}
     </div>
   )
 }

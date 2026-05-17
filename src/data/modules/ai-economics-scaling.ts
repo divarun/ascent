@@ -4,7 +4,7 @@ export const aiEconomicsScaling = {
   summary:
     "Token costs, inference latency, caching strategies, model routing, batch processing, and the scaling realities that prototype economics hide.",
   difficulty: "INTERMEDIATE" as const,
-  roles: ["EM", "IC"] as const,
+  roles: ["PM", "EM", "IC"] as const,
   tags: ["economics", "scaling", "infrastructure", "cost"],
   order: 12,
   content: `## AI Economics & Scaling

@@ -155,6 +155,22 @@ Not all AI outputs should bypass human review, especially early in a product's l
 
 **Escalation paths:** For any AI feature where errors have real consequences, define the path from "AI fails" to "human resolves." Who receives the escalation? What's the SLA? What do they need to resolve it?
 
+### The Ownership Problem
+
+Evaluation infrastructure degrades without active ownership. This is the most common way AI features fail silently in production — not because of model failure, but because the people watching for model failure stopped watching.
+
+The pattern is predictable: a team builds a golden dataset and eval suite before launch. The launch goes well. The team moves to the next feature. No one is explicitly assigned to maintain the eval suite. The golden dataset isn't updated when the product changes. The CI eval gate starts failing intermittently due to infrastructure issues; an engineer marks it as flaky and disables it. Three months later, a prompt change ships that significantly degrades quality for a specific user segment. Nobody knows until customer complaints arrive, because the monitoring that would have caught it was quietly removed.
+
+**What ownership requires in practice:**
+
+A named owner for the golden dataset — one person responsible for adding new failure cases when they're found in production, updating expected outputs when the product changes, and running a quarterly review of whether the dataset still represents real usage.
+
+An explicit decision process for changes to the eval gate. Disabling or weakening an eval threshold should require the same approval as removing a safety check — because that's what it is. When it happens under time pressure without documentation, it means the next regression ships without detection.
+
+A regular quality review cadence — not just monitoring dashboards, but someone reading recent eval results and asking whether the trends make sense. Slow drift (1–2 percentage point quality degradation per quarter) is invisible to alerting systems calibrated for sudden drops. Only a human reviewing trends over months will catch it.
+
+**The question to ask before launch:** If the engineer who built this eval suite leaves in 3 months, what happens to it? If the answer is "it atrophies," you don't have an eval system — you have a temporary snapshot. Build the ownership structure before it matters, not after it degrades.
+
 ### The Minimum Viable Eval Stack
 
 If you have nothing, build in this order:

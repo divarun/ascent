@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { appConfig } from "@/config/app"
+import { SCORING } from "@/config/scoring"
 
 const T = {
   bg: "#F0EFEB",
@@ -22,12 +23,19 @@ const PILLARS = [
   { tag: "03", name: "Missions",    sub: "Apply",  desc: "Exercises you complete on your real work. Find an AI opportunity. Draft a usage policy. Run a bias check. Write a feature brief.", meta: "Pick a mission",  href: "/missions" },
 ]
 
-const LEVELS = [
-  { n: 1, name: "Aware",        pts: "0",   blurb: "You know the landscape." },
-  { n: 2, name: "Informed",     pts: "100", blurb: "You can ask the right questions." },
-  { n: 3, name: "Practitioner", pts: "300", blurb: "You make defensible calls." },
-  { n: 4, name: "Leader",       pts: "600", blurb: "You set the direction for others." },
-]
+const LEVEL_BLURBS: Record<number, string> = {
+  1: "You know the landscape.",
+  2: "You can ask the right questions.",
+  3: "You make defensible calls.",
+  4: "You set the direction for others.",
+}
+
+const LEVELS = SCORING.levels.map((l) => ({
+  n: l.level,
+  name: l.name,
+  pts: String(l.minPoints),
+  blurb: LEVEL_BLURBS[l.level] ?? "",
+}))
 
 
 const AUDIENCE_ROLES = [
@@ -113,7 +121,6 @@ function Ridge() {
   )
 }
 
-const W = "100%"
 const MAX = 1240
 const PAD = "clamp(16px, 4vw, 40px)"
 const inner: React.CSSProperties = { maxWidth: MAX, margin: "0 auto", padding: `0 ${PAD}` }
@@ -206,19 +213,34 @@ function LevelsSection() {
     <section style={{ borderBottom: `1px solid ${T.line}` }}>
       <div style={{ ...inner, padding: `100px ${PAD}` }}>
         <SectionHead kicker="The arc" title="Four levels. Earned, not awarded." lede="Progress reflects the decisions you've reasoned through — your position on a defined path from Aware to Leader." />
-        <div className="grid sm:grid-cols-2 md:grid-cols-4" style={{ marginTop: 72, position: "relative", gap: 0 }}>
-          <div style={{ position: "absolute", left: 0, right: 0, top: 36, height: 1, background: T.line }} />
-          {LEVELS.map((l, i) => (
-            <div key={l.n} style={{ padding: "0 24px 0 0", position: "relative" }}>
-              <div style={{ width: 14, height: 14, borderRadius: 999, background: T.bg, border: `1.5px solid ${T.ink}`, position: "absolute", top: 30, left: -1, zIndex: 2 }} />
-              <div style={{ position: "absolute", top: 36, left: 13, height: 1, width: i === LEVELS.length - 1 ? 0 : "calc(100% - 12px)", background: T.ink, opacity: i < 2 ? 0.9 : i === 2 ? 0.5 : 0.2 }} />
-              <div style={{ paddingTop: 70 }}>
-                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: T.sub, marginBottom: 10 }}>L0{l.n} · {l.pts} PTS</div>
-                <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 32, lineHeight: 1, letterSpacing: "-0.01em", color: T.ink }}>{l.name}</div>
-                <div style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: T.sub, maxWidth: 200 }}>{l.blurb}</div>
+        <div style={{ marginTop: 24, position: "relative" }}>
+          <svg viewBox="0 0 1200 220" preserveAspectRatio="none" aria-hidden style={{ display: "block", width: "100%", height: "auto" }}>
+            <defs>
+              <linearGradient id="ridgeFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor="#1A1814" stopOpacity="0.06" />
+                <stop offset="1" stopColor="#1A1814" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0 200 L60 175 L120 165 L180 145 L240 130 L300 120 L360 100 L420 95 L480 80 L540 70 L600 55 L660 65 L720 45 L780 38 L840 28 L900 35 L960 18 L1020 10 L1080 22 L1140 12 L1200 4 L1200 220 L0 220 Z" fill="url(#ridgeFill)" />
+            <path d="M0 200 L60 175 L120 165 L180 145 L240 130 L300 120 L360 100 L420 95 L480 80 L540 70 L600 55 L660 65 L720 45 L780 38 L840 28 L900 35 L960 18 L1020 10 L1080 22 L1140 12 L1200 4" stroke="#1A1814" strokeWidth="1.4" fill="none" strokeLinejoin="round" />
+            <circle cx="150" cy="155" r="5" fill="#1A1814" />
+            <circle cx="450" cy="87" r="5" fill="#1A1814" />
+            <circle cx="750" cy="42" r="5" fill="#F0EFEB" stroke="#1A1814" strokeWidth="1.4" />
+            <circle cx="1050" cy="16" r="5" fill="#F0EFEB" stroke="#1A1814" strokeWidth="1.4" />
+            <line x1="150" y1="160" x2="150" y2="218" stroke="#1A1814" strokeWidth="1" strokeDasharray="2 3" opacity="0.35" />
+            <line x1="450" y1="92" x2="450" y2="218" stroke="#1A1814" strokeWidth="1" strokeDasharray="2 3" opacity="0.35" />
+            <line x1="750" y1="47" x2="750" y2="218" stroke="#1A1814" strokeWidth="1" strokeDasharray="2 3" opacity="0.35" />
+            <line x1="1050" y1="21" x2="1050" y2="218" stroke="#1A1814" strokeWidth="1" strokeDasharray="2 3" opacity="0.35" />
+          </svg>
+          <div className="grid grid-cols-2 md:grid-cols-4" style={{ marginTop: -1, borderTop: `1px solid ${T.ink}` }}>
+            {LEVELS.map((l, i) => (
+              <div key={l.n} style={{ padding: "18px 22px 22px", borderRight: i < 3 ? `1px solid ${T.line}` : "none", position: "relative" }}>
+                <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", color: i < 2 ? T.sub : "#A09890", textTransform: "uppercase", marginBottom: 8 }}>L0{l.n} · {l.pts} PTS</div>
+                <div style={{ fontFamily: '"Instrument Serif", serif', fontSize: 28, lineHeight: 1, letterSpacing: "-0.01em", color: i < 2 ? T.ink : "#A09890", marginBottom: 8 }}>{l.name}</div>
+                <div style={{ fontSize: 13, color: i < 2 ? T.sub : "#B0ABA3", lineHeight: 1.5 }}>{l.blurb}</div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         <div style={{ marginTop: 56, padding: "20px 24px", border: `1px dashed ${T.line}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
           <div style={{ fontSize: 13.5, color: T.sub, maxWidth: 720 }}>Levels and points only apply to signed-in users. Guests can read all modules and try a selection of scenarios and missions without signing up — progress isn&apos;t saved between sessions.</div>

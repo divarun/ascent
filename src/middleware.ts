@@ -58,9 +58,12 @@ export function middleware(req: NextRequest) {
   }
 
   // No valid session — rate-limit to guard against brute-force login attempts
-  const ip = getClientIp(req)
-  if (!rateLimit(`admin:${ip}`, 10, 60_000)) {
-    return new NextResponse("Too Many Requests", { status: 429 })
+  // Skip when DISABLE_ADMIN_RATE_LIMIT=true (useful for local Docker runs)
+  if (process.env.DISABLE_ADMIN_RATE_LIMIT !== "true") {
+    const ip = getClientIp(req)
+    if (!rateLimit(`admin:${ip}`, 10, 60_000)) {
+      return new NextResponse("Too Many Requests", { status: 429 })
+    }
   }
 
   // Page routes: require Basic Auth and set the session cookie on success

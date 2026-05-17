@@ -2,7 +2,7 @@ export const aiEthicsBias = {
   slug: "ai-ethics-bias",
   title: "AI Ethics & Bias",
   summary:
-    "How bias enters AI systems, what fairness actually means, how to audit before you ship, and how to make responsible deployment decisions before they become legal or reputational problems.",
+    "AI ethics isn't a compliance checkbox — it's a product decision with legal and business consequences. How bias enters AI systems, what fairness definitions are mutually incompatible, how to audit before you ship, and how to build the operational infrastructure to catch problems before they scale.",
   difficulty: "INTERMEDIATE" as const,
   roles: ["PM", "EM", "IC"] as const,
   tags: ["ethics", "bias", "fairness", "risk"],

@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/AppShell"
 import { Loader2 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { isModuleFree } from "@/config/access"
+import { C } from "@/lib/colors"
 import { LevelUpBanner } from "@/components/LevelUpBanner"
 
 const COMPLETED_KEY = "ascent_completed_modules"
@@ -22,8 +23,6 @@ function removeLocalCompletion(slug: string) {
   const existing = getLocalCompletions()
   localStorage.setItem(COMPLETED_KEY, JSON.stringify(existing.filter((s) => s !== slug)))
 }
-
-const C = { ink: "#1A1814", sub: "#65605A", line: "#DDDCD9", panel: "#F8F7F5", bg: "#F0EFEB", chip: "#E8E6E1", good: "#2C5F4F", warn: "#A65A2E" }
 
 type QuizQuestion = { question: string; options: string[]; correct: number; explanation: string }
 
@@ -143,7 +142,7 @@ export default function ModulePage() {
 
   useEffect(() => {
     if (status === "loading") return
-    if (!session && !isModuleFree(slug)) {
+    if (!session && !isModuleFree()) {
       router.replace(`/login?callbackUrl=/learn/${slug}`)
       return
     }

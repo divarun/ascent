@@ -4,7 +4,7 @@ export const agenticAi = {
   summary:
     "How AI agents work, what tool use enables, agent architectures that matter, where agentic systems break down, and how to build loops that are actually reliable.",
   difficulty: "INTERMEDIATE" as const,
-  roles: ["EM", "IC"] as const,
+  roles: ["PM", "EM", "IC"] as const,
   tags: ["agents", "tool-use", "architecture", "reliability"],
   order: 11,
   content: `## Agentic AI
@@ -89,6 +89,22 @@ Agents can use several types of memory. Knowing which to use matters.
 **Procedural memory** — instructions, personas, or learned preferences stored in the system prompt. Updated infrequently. Useful for persistent behavior rules ("always cite sources," "always ask for clarification before deleting").
 
 Most production agents use a combination: in-context for the current task, retrieval for background knowledge or history, and system prompt for behavior constraints.
+
+### Is This Worth the Complexity?
+
+The hardest agentic architecture decision is not which pattern to use — it's whether to use one at all. Every agent loop is a latency cost, a failure point, a debugging surface, and a token expense. A 5-step agent with 90% per-step reliability completes without error only about 59% of the time. A 10-step agent: 35%.
+
+Before adding agency, four questions are worth answering explicitly:
+
+**Does the task actually require information not available at prompt time?** If everything the model needs is already in context, a single call is always better. Agents are justified when the task requires real-time data, proprietary data not in the model's training, or information whose size or availability isn't known until the task begins.
+
+**Does the task require multiple sequential steps where each step's output determines the next?** If the steps are fixed and predictable, a deterministic pipeline is simpler and more reliable than a reasoning loop. Agent loops earn their complexity when the path through a task genuinely can't be determined in advance.
+
+**Are errors recoverable?** Single-call errors are local — retry or surface to the user. Agent errors propagate: a mistake at step 3 corrupts steps 4 through 10. High-stakes, irreversible actions in the middle of an agent loop require human checkpoints that add exactly the latency and complexity agents are supposed to eliminate.
+
+**Do you have the observability to debug this?** An agent that produces a wrong answer and leaves no trace of its reasoning chain is not a production system — it's a black box with a bad track record. Structured logging of every tool call, input, output, and reasoning step is not optional for agentic systems.
+
+If a simpler design can solve the problem, it's the right design. Agents are not inherently more sophisticated than single calls — they're more expensive to build, more expensive to operate, and harder to debug. Use them when you need them, not because the task sounds complex enough to deserve them.
 
 ### Where Agents Break Down
 

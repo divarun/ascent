@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { AppShell } from "@/components/layout/AppShell"
 import { sampleModules } from "@/data/modules"
 import { ModuleList } from "@/components/ModuleList"
+import { DIFFICULTY_ORDER } from "@/lib/utils"
 
 export const revalidate = 60
 
@@ -18,8 +19,6 @@ export default async function LearnPage() {
     const progress = await db.progress.findUnique({ where: { userId: session.user.id } })
     completedIds = progress?.completedModules ?? []
   }
-
-  const DIFFICULTY_ORDER: Record<string, number> = { BEGINNER: 0, INTERMEDIATE: 1, ADVANCED: 2 }
 
   const displayModules = (modules.length > 0
     ? modules.map((m) => ({
@@ -54,10 +53,10 @@ export default async function LearnPage() {
           className="m-0 font-normal"
           style={{ fontFamily: '"Instrument Serif", serif', fontSize: 56, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#1A1814" }}
         >
-          Read the material.
+          The modules.
         </h1>
         <p className="mt-6 mb-0 max-w-2xl" style={{ fontSize: 16, lineHeight: 1.6, color: "#65605A" }}>
-          Self-contained modules covering key AI concepts. Read in order or jump to what&apos;s relevant for your role.
+          Text-first. Read what&apos;s relevant; skip what isn&apos;t. Modules don&apos;t gate each other. New content lands on a release schedule.
         </p>
       </div>
 

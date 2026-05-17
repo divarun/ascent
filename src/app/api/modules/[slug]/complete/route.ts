@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { calculateLevel, getLevelLabel } from "@/lib/utils"
+import { getPoints } from "@/config/scoring"
+import { sampleModules } from "@/data/modules"
 
 export async function POST(
   req: NextRequest,
@@ -17,6 +19,8 @@ export async function POST(
 
   const module = await db.module.findUnique({ where: { slug: params.slug } })
   const moduleId = module?.id ?? params.slug
+  const difficulty = module?.difficulty ?? sampleModules.find((m) => m.slug === params.slug)?.difficulty ?? "INTERMEDIATE"
+  const pts = getPoints("module", difficulty)
 
   const oldProg = await db.progress.findUnique({ where: { userId: session.user.id } })
   const oldLevel = calculateLevel(oldProg?.totalPoints ?? 0)
@@ -26,13 +30,13 @@ export async function POST(
     const prog = await tx.progress.findUnique({ where: { userId: session.user.id } })
     if (!prog) {
       await tx.progress.create({
-        data: { userId: session.user.id, completedModules: [moduleId], totalPoints: 25 },
+        data: { userId: session.user.id, completedModules: [moduleId], totalPoints: pts },
       })
-      newPoints = 25
+      newPoints = pts
     } else if (!prog.completedModules.includes(moduleId)) {
       const updated = await tx.progress.update({
         where: { userId: session.user.id },
-        data: { completedModules: { push: moduleId }, totalPoints: { increment: 25 } },
+        data: { completedModules: { push: moduleId }, totalPoints: { increment: pts } },
       })
       newPoints = updated.totalPoints
     }

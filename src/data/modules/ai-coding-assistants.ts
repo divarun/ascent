@@ -243,17 +243,26 @@ For high-sensitivity environments: locally-hosted completions, self-hosted optio
 **Generated code and IP:**
 There's unresolved legal uncertainty around AI-generated code that closely mirrors training data. Some tools offer a "code duplication detection" filter. If this matters to your legal team, enable it.
 
-### Skill Development Risk
+### Skill Development Risk: Coasters vs. Builders
 
 The most underappreciated management problem is skill atrophy, particularly for junior engineers.
 
 An engineer who uses AI completions before understanding what correct code looks like develops a cargo-cult relationship with the tool: they produce code that looks right without building the mental model to know when it's wrong. The result is engineers who are fast at generating code and slow at debugging it.
+
+This produces two distinct patterns on any team that adopts AI tools:
+
+**Builders** use AI as a thinking partner and accelerant. They bring strong fundamentals, critically evaluate AI output, and use the tool to go faster on work they already understand. They get better over time — faster and more capable.
+
+**Coasters** use AI as a crutch. They generate code they can't fully explain, accept suggestions without verification, and plateau quickly. Their velocity looks good in the short term; their debugging skills, architecture judgment, and code ownership don't grow.
+
+Both patterns look the same in sprint velocity reports. They diverge at 2am when something breaks in production.
 
 **Mitigations:**
 - Set an explicit policy for junior engineers: AI completions are review tools, not answers. Before accepting a suggestion, be able to explain what it does and why it's correct.
 - Maintain code review standards. "The AI wrote it" doesn't lower the bar — if anything, AI-generated code warrants more scrutiny.
 - Preserve unassisted practice: debugging sessions, architecture discussions, whiteboard problem-solving. These build the understanding that makes AI tools useful rather than load-bearing.
 - Watch for the plateau signal: junior engineers who improve quickly then stop improving. Fast generation can mask the absence of deepening understanding.
+- **The "write it twice" practice:** Periodically solve a problem without AI first, then redo it with AI assistance. The first pass builds the mental model; the second reveals what the AI would have done differently. Engineers who never write code without AI don't know what they would have written — and that gap grows.
 
 **For your own development:** Use AI for acceleration, not for avoiding understanding. The engineers who get the most from AI coding tools are the ones with strong fundamentals — they evaluate AI output critically because they know what correct looks like.
 

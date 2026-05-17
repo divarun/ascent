@@ -18,10 +18,9 @@ type Module = {
   relevant: boolean
 }
 
-const diffLabel: Record<string, string> = {
-  BEGINNER: "Beginner",
-  INTERMEDIATE: "Intermediate",
-  ADVANCED: "Advanced",
+const TIER_ORDER = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const
+const TIER_LABEL: Record<string, string> = {
+  BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced",
 }
 
 function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "warn" | "accent" | "default" }) {
@@ -53,8 +52,9 @@ function Pill({ children, tone }: { children: React.ReactNode; tone?: "good" | "
 }
 
 export function ModuleList({ modules, isGuest }: { modules: Module[]; isGuest?: boolean }) {
-  const { role, difficulty, selectRole, selectDifficulty, resetAll, visible, showRoleFilter, showDiffFilter, mounted } = useContentFilters(modules)
+  const { role, selectRole, resetAll, visible, showRoleFilter, mounted } = useContentFilters(modules)
   const [localCompleted, setLocalCompleted] = useState<string[]>([])
+  const [activeTier, setActiveTier] = useState<string>("BEGINNER")
 
   useEffect(() => {
     try {
@@ -67,66 +67,96 @@ export function ModuleList({ modules, isGuest }: { modules: Module[]; isGuest?: 
 
   if (!mounted) return null
 
+  // Group visible modules by difficulty tier, preserve order within each tier
+  const grouped: Record<string, Module[]> = { BEGINNER: [], INTERMEDIATE: [], ADVANCED: [] }
+  visible.forEach(m => {
+    const tier = m.difficulty in grouped ? m.difficulty : "BEGINNER"
+    grouped[tier].push(m)
+  })
+
+  // Global F## index across all tiers (based on full unfiltered list)
+  let fIndex = 0
+  const moduleCodes: Record<string, string> = {}
+  modules.forEach(m => {
+    fIndex++
+    moduleCodes[m.id] = `F${String(fIndex).padStart(2, "0")}`
+  })
+
+  const activeItems = grouped[activeTier] ?? []
+
   return (
     <div>
       <FilterBar
         role={role}
-        difficulty={difficulty}
         showRoleFilter={showRoleFilter}
-        showDiffFilter={showDiffFilter}
         onRoleChange={selectRole}
-        onDifficultyChange={selectDifficulty}
       />
 
-      <div className="border-t border-border">
-        {visible.map((m, i) => {
+      {/* Difficulty tabs */}
+      <div style={{ display: "flex", borderBottom: "1px solid #DDDCD9", marginBottom: 2 }}>
+        {TIER_ORDER.map(tier => {
+          const count = grouped[tier].length
+          const isActive = tier === activeTier
+          return (
+            <button
+              key={tier}
+              onClick={() => setActiveTier(tier)}
+              style={{
+                fontFamily: '"JetBrains Mono", monospace',
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "12px 20px",
+                color: isActive ? "#1A1814" : "#65605A",
+                background: "transparent",
+                border: "none",
+                borderBottom: isActive ? "2px solid #1A1814" : "2px solid transparent",
+                cursor: "pointer",
+                marginBottom: -1,
+                transition: "color 120ms",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              {TIER_LABEL[tier]}
+              <span style={{ opacity: isActive ? 0.45 : 0.3 }}>{count}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Module list for active tier */}
+      {activeItems.length === 0 ? (
+        <div className="py-12 text-center" style={{ color: "#65605A", fontSize: 14 }}>
+          No modules match those filters.{" "}
+          <button onClick={resetAll} className="underline hover:no-underline">Show all</button>
+        </div>
+      ) : (
+        activeItems.map(m => {
           const completed = m.completed || localCompleted.includes(m.slug)
-          const rowStyle: React.CSSProperties = {
-            gridTemplateColumns: "60px 1fr 140px 120px 24px",
-            gap: 24,
-            padding: "20px 8px",
-            borderBottom: "1px solid #E5E4E0",
-            color: "#1A1814",
-          }
-          const inner = (
-            <>
+          const code = moduleCodes[m.id] ?? ""
+          return (
+            <Link
+              key={m.id}
+              href={`/learn/${m.slug}`}
+              className="grid items-center no-underline transition-colors duration-150 [grid-template-columns:48px_1fr_24px]"
+              style={{ gap: 16, padding: "20px 8px", borderBottom: "1px solid #E5E4E0", color: "#1A1814" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#E8E6E1")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
               <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "#65605A", letterSpacing: "0.06em" }}>
-                {String(i + 1).padStart(2, "0")}
+                {code}
               </span>
               <span className="flex items-center gap-2.5 font-medium" style={{ fontSize: 15.5 }}>
                 {m.title}
                 {completed && <Pill tone="good">✓ done</Pill>}
               </span>
-              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A", textTransform: "uppercase" }}>
-                {diffLabel[m.difficulty] ?? m.difficulty}
-              </span>
-              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", color: "#65605A" }}>
-                {m.roles.join("/")}
-              </span>
               <span style={{ color: "#65605A", fontSize: 14 }}>→</span>
-            </>
-          )
-          return (
-            <Link
-              key={m.id}
-              href={`/learn/${m.slug}`}
-              className="grid items-center no-underline transition-colors duration-150 group"
-              style={rowStyle}
-              onMouseEnter={e => (e.currentTarget.style.background = "#E8E6E1")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              {inner}
             </Link>
           )
-        })}
-
-        {visible.length === 0 && (
-          <div className="py-12 text-center" style={{ color: "#65605A", fontSize: 14 }}>
-            No modules match those filters.{" "}
-            <button onClick={resetAll} className="underline hover:no-underline">Show all</button>
-          </div>
-        )}
-      </div>
+        })
+      )}
     </div>
   )
 }

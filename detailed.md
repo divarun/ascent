@@ -28,7 +28,7 @@ Open `.env` and set `NEXTAUTH_SECRET` (generate one with `openssl rand -base64 3
 
 ```bash
 # Start postgres and the app
-docker compose up -d
+docker compose up
 ```
 
 ### Path B: Without Docker
@@ -65,6 +65,7 @@ npm run db:migrate
 ```bash
 npm run db:seed
 ```
+
 
 ---
 

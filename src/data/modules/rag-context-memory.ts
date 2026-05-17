@@ -17,6 +17,18 @@ An LLM knows what it was trained on — nothing more. If you need it to work wit
 
 RAG does this systematically. The model answers questions by reasoning over retrieved context rather than relying on what it memorized during training. This also makes answers verifiable — you can show users the source documents the answer came from.
 
+### Before You Build: Three Questions Worth Answering
+
+Teams reach for RAG early because it sounds like the right pattern. Before committing to a retrieval pipeline, three questions are worth answering explicitly — because each has a cheaper answer than RAG.
+
+**Does your data actually fit in the context window?** A 50-page document is roughly 25,000 tokens. Most current model context windows can hold it directly. If your data is small enough to include wholesale, do that first — no retrieval complexity, no retrieval failures, no freshness lag. Test whether direct inclusion outperforms retrieval before building a pipeline.
+
+**Is retrieval actually the bottleneck?** RAG gives the model more information. If the problem is that the model reasons poorly about information it already has, more information won't fix that — a better prompt, a more capable model, or structured output constraints will. Diagnose before building.
+
+**Do you have what it takes to maintain freshness?** A RAG system whose index is stale answers confidently from outdated information. Maintaining freshness requires an ingestion pipeline that keeps up with source changes — update detection, re-chunking, re-embedding, deletion when source documents are removed. Factor in ongoing operational cost, not just initial build cost.
+
+If you can answer all three questions and RAG is still the right call, build it. The section below covers how to build it well.
+
 ### How RAG Works: The Full Pipeline
 
 \`\`\`
@@ -225,7 +237,25 @@ For most teams starting out: pgvector if you're on Postgres, Chroma or Qdrant fo
 
 **If your data changes constantly:** Ingestion pipelines must keep up with source changes. High-frequency updates (real-time data feeds, live databases) require near-real-time ingestion architectures. Factor in freshness requirements before designing the system.
 
-**If the bottleneck is reasoning, not knowledge:** RAG provides context; it doesn't improve the model's reasoning ability. If your use case requires complex multi-step inference on data the model already has, better prompting or a more capable model addresses the problem more directly than better retrieval.`,
+**If the bottleneck is reasoning, not knowledge:** RAG provides context; it doesn't improve the model's reasoning ability. If your use case requires complex multi-step inference on data the model already has, better prompting or a more capable model addresses the problem more directly than better retrieval.
+
+### Who Owns This in Six Months?
+
+RAG systems degrade silently. This is one of the most important facts about them in production.
+
+When the ingestion pipeline falls behind, documents become stale and answers become confidently wrong about recent changes. When chunk quality drifts — because source document formatting changed and nobody updated the chunking logic — retrieval recall drops. When the model provider updates their embedding model, your existing embeddings are now from a different model than your query embeddings, and similarity scores become unreliable.
+
+None of these failures produce obvious errors. They produce slightly worse answers that users either attribute to AI limitations and accept, or gradually stop trusting and don't report.
+
+**What ownership requires:**
+
+Freshness monitoring — a dashboard or alert that tracks ingestion lag between source document updates and vector store updates. Anything beyond a few hours of lag for a knowledge-critical system should trigger investigation.
+
+Retrieval quality monitoring — periodic evaluation of retrieval recall on a golden query set. Not just end-to-end answer quality, but whether the right chunks are actually being retrieved. This is the metric most commonly absent from production RAG systems.
+
+An owned ingestion runbook — documented process for what happens when a source system changes format, when a document type is added, when access permissions change. Without this, the team discovers these failures when customers report wrong answers.
+
+Before shipping a RAG system, define: who owns freshness? Who owns retrieval quality? Who gets paged when the ingestion pipeline stalls? If the answer to any of these is "whoever's on call" or "we'll figure it out," you have undifferentiated ownership, which means no one owns it.`,
   quiz: [
     {
       question: "A RAG system consistently retrieves the correct documents but the generated answers are still frequently wrong. What should you investigate first?",

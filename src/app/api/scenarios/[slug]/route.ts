@@ -6,6 +6,7 @@ import { sampleScenarios } from "@/data/scenarios"
 import { isScenarioFree } from "@/config/access"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { calculateLevel, getLevelLabel } from "@/lib/utils"
+import { getPoints } from "@/config/scoring"
 import { z } from "zod"
 
 type ScenarioFeedback = {
@@ -101,6 +102,7 @@ export async function POST(
   let levelName = "Aware"
 
   if (session?.user?.id && dbScenario) {
+    const pts = getPoints("scenario", dbScenario.difficulty)
     const oldProg = await db.progress.findUnique({ where: { userId: session.user.id } })
     const oldLevel = calculateLevel(oldProg?.totalPoints ?? 0)
     let newPoints = oldProg?.totalPoints ?? 0
@@ -120,13 +122,13 @@ export async function POST(
       const prog = await tx.progress.findUnique({ where: { userId: session.user.id } })
       if (!prog) {
         await tx.progress.create({
-          data: { userId: session.user.id, completedScenarios: [dbScenario.id], totalPoints: 50 },
+          data: { userId: session.user.id, completedScenarios: [dbScenario.id], totalPoints: pts },
         })
-        newPoints = 50
+        newPoints = pts
       } else if (!prog.completedScenarios.includes(dbScenario.id)) {
         const updated = await tx.progress.update({
           where: { userId: session.user.id },
-          data: { completedScenarios: { push: dbScenario.id }, totalPoints: { increment: 50 } },
+          data: { completedScenarios: { push: dbScenario.id }, totalPoints: { increment: pts } },
         })
         newPoints = updated.totalPoints
       }

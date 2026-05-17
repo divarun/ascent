@@ -4,7 +4,7 @@ export const designingTheEval = {
   isUnlocked: false,
   summary:
     "You're building a new AI code review assistant for your team. There's no evaluation infrastructure. You need to design the whole thing before writing a line of prompt.",
-  roles: ["IC"] as const,
+  roles: ["EM", "IC"] as const,
   difficulty: "ADVANCED" as const,
   industry: "Engineering",
   context: `You're a senior IC at a 60-person startup. Your engineering manager has asked you to own the implementation of an AI code review assistant that will run on every pull request.

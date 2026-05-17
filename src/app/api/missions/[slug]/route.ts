@@ -6,6 +6,7 @@ import { sampleMissions } from "@/data/missions"
 import { isMissionFree } from "@/config/access"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { calculateLevel, getLevelLabel } from "@/lib/utils"
+import { getPoints } from "@/config/scoring"
 import { z } from "zod"
 
 type MissionFeedback = {
@@ -86,6 +87,7 @@ export async function POST(
   let levelName = "Aware"
 
   if (session?.user?.id && dbMission) {
+    const pts = getPoints("mission", dbMission.difficulty)
     const oldProg = await db.progress.findUnique({ where: { userId: session.user.id } })
     const oldLevel = calculateLevel(oldProg?.totalPoints ?? 0)
     let newPoints = oldProg?.totalPoints ?? 0
@@ -103,13 +105,13 @@ export async function POST(
       const prog = await tx.progress.findUnique({ where: { userId: session.user.id } })
       if (!prog) {
         await tx.progress.create({
-          data: { userId: session.user.id, completedMissions: [dbMission.id], totalPoints: 40 },
+          data: { userId: session.user.id, completedMissions: [dbMission.id], totalPoints: pts },
         })
-        newPoints = 40
+        newPoints = pts
       } else if (!prog.completedMissions.includes(dbMission.id)) {
         const updated = await tx.progress.update({
           where: { userId: session.user.id },
-          data: { completedMissions: { push: dbMission.id }, totalPoints: { increment: 40 } },
+          data: { completedMissions: { push: dbMission.id }, totalPoints: { increment: pts } },
         })
         newPoints = updated.totalPoints
       }

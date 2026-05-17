@@ -4,7 +4,7 @@ export const buildVsBuy = {
   summary:
     "When to use an API, when to self-host, when to fine-tune, and how to avoid lock-in — a practical decision framework for the full AI solution spectrum.",
   difficulty: "INTERMEDIATE" as const,
-  roles: ["PM", "EM"] as const,
+  roles: ["PM", "EM", "IC"] as const,
   tags: ["strategy", "architecture", "decision-making"],
   order: 7,
   content: `## Build vs. Buy: AI Edition
