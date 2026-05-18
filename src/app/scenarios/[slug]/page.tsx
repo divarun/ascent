@@ -10,6 +10,7 @@ import { isScenarioFree } from "@/config/access"
 import { C } from "@/lib/colors"
 import { MonoLabel, Panel, BulletList } from "@/components/detail-layout"
 import { LevelUpBanner } from "@/components/LevelUpBanner"
+import { getPoints } from "@/config/scoring"
 
 type Prompt = { id: string; question: string; followUp: string | null; modelAnswer?: string }
 type ScenarioData = { id: string; slug: string; title: string; summary: string; context: string; roles: string[]; difficulty: string; industry: string | null; prompts: Prompt[] }
@@ -274,7 +275,7 @@ export default function ScenarioPage() {
         {phase === "feedback" && feedback && (
           <div>
             <div style={{ marginBottom: 32 }}>
-              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: C.good }}>✓ SCENARIO COMPLETE{session ? " — +50 PTS" : ""}</div>
+              <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: C.good }}>✓ SCENARIO COMPLETE{session ? ` — +${getPoints("scenario", scenario.difficulty)} PTS` : ""}</div>
               <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", color: C.sub, marginTop: 4 }}>EXPERT PERSPECTIVE — WHAT STRONG RESPONSES ADDRESS</div>
               {levelUp && <LevelUpBanner level={levelUp.level} name={levelUp.name} />}
             </div>

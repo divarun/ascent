@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown"
 import { isModuleFree } from "@/config/access"
 import { C } from "@/lib/colors"
 import { LevelUpBanner } from "@/components/LevelUpBanner"
+import { getPoints } from "@/config/scoring"
 
 const COMPLETED_KEY = "ascent_completed_modules"
 
@@ -260,7 +261,7 @@ export default function ModulePage() {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", color: C.good }}>
-                  ✓ MODULE COMPLETE{session ? " — +25 PTS" : ""}
+                  ✓ MODULE COMPLETE{session ? ` — +${getPoints("module", module.difficulty)} PTS` : ""}
                 </span>
                 <button
                   onClick={() => router.push("/learn")}

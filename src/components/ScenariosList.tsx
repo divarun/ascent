@@ -42,6 +42,84 @@ const DOSSIER: Record<string, { stakes: string; pressure: string; deadline: stri
     deadline: "End of day.",
     calls: "Debug · hypothesize · reproduce · prevent",
   },
+  "agent-went-rogue": {
+    stakes: "AI outreach agent sent 1,200 customers pricing emails at 40% below actual rates. Some have already replied.",
+    pressure: "Customers are responding to lock in the price. Legal and sales don't know yet.",
+    deadline: "Morning.",
+    calls: "Contain · communicate · correct · prevent",
+  },
+  "build-eval-first": {
+    stakes: "Enterprise launch in 14 days. No evals exist to verify AI summary accuracy across document types.",
+    pressure: "PM says ship. Customers cited it as buying criteria. VP will ask about any delay.",
+    deadline: "14 days.",
+    calls: "Delay · de-scope · add guardrails · ship and measure",
+  },
+  "senior-refuses-ai": {
+    stakes: "Your best engineer tried AI tools seriously for 3 weeks and concluded they're slower. Team is split.",
+    pressure: "No conflict yet — but the divergence is visible and growing across the team.",
+    deadline: "Next 1:1.",
+    calls: "Require · accommodate · investigate · leave it",
+  },
+  "junior-ai-dependence": {
+    stakes: "Junior IC is shipping high volume with AI but can't explain their own code or debug independently.",
+    pressure: "PRs are getting approved. The problem is invisible in metrics — only visible up close.",
+    deadline: "No hard deadline, but the pattern is hardening.",
+    calls: "Intervene · restrict · mentor · let it play out",
+  },
+  "competitor-launched-ai": {
+    stakes: "Competitor's AI brief generator is on Product Hunt. CEO forwarded the article: 'We need this.'",
+    pressure: "Engineering says 3 months. Your research shows it wasn't a user need. Roadmap gets paused.",
+    deadline: "CEO wants a timeline now.",
+    calls: "Build it · investigate first · push back · reframe the ask",
+  },
+  "board-ai-roadmap": {
+    stakes: "10 minutes at the board meeting to present three AI initiatives with mixed evidence.",
+    pressure: "'What's your AI strategy?' went unanswered last quarter. One board member will push on ROI.",
+    deadline: "Board meeting.",
+    calls: "Honest · selective · reframe scope · buy time",
+  },
+  "cto-cut-juniors": {
+    stakes: "CTO wants to eliminate 3 junior positions at the next headcount review. You disagree.",
+    pressure: "Senior engineers are ambivalent. Juniors don't know. Your 1:1 with the CTO is next Wednesday.",
+    deadline: "Headcount review in 6 weeks.",
+    calls: "Push back · propose alternatives · gather data · comply",
+  },
+  "half-team-claude-code": {
+    stakes: "Production incident traced to AI-generated code. Half the team faster; other half doing extra review burden.",
+    pressure: "No policy. Team tension is building. Sprint planning is in 3 days.",
+    deadline: "Sprint planning in 3 days.",
+    calls: "Ban · require · set guardrails · do nothing",
+  },
+  "ai-pr-security-bug": {
+    stakes: "420-line AI-generated PR with a suspected SQL injection in a user data export endpoint.",
+    pressure: "Release train confirmed. Three other teams' PRs are on it. Deployment is in 2 hours.",
+    deadline: "4pm. 2 hours away.",
+    calls: "Block · investigate · escalate · approve with note",
+  },
+  "expensive-ai-endpoint": {
+    stakes: "AI feature running at 8x estimated cost — $2,232/day vs $288/day budget.",
+    pressure: "CEO: 'It either gets cheaper this week or we pull it.' Feature is live with 6,000 daily users.",
+    deadline: "One week.",
+    calls: "Cache · switch models · rate-limit · pull the feature",
+  },
+  "designing-the-eval": {
+    stakes: "Building an AI code reviewer with no eval infrastructure. Engineers will turn it off if it's noisy.",
+    pressure: "Manager: 'Don't start building until you know how you'll know if it's working.' One week to design.",
+    deadline: "One week before implementation begins.",
+    calls: "Define metrics · build golden set · set thresholds · design feedback loop",
+  },
+  "chatbot-nobody-wanted": {
+    stakes: "PM committed to an AI chatbot in the roadmap. Your analytics show 12% usage on the existing AI feature.",
+    pressure: "Roadmap deck went to the VP. Enterprise accounts are already asking about timelines.",
+    deadline: "Q3 roadmap committed.",
+    calls: "Build it · push back · propose alternative · negotiate scope",
+  },
+  "autonomy-creep": {
+    stakes: "AI assistant gained email access through 8 months of incremental approvals. Sent a message to a customer at 2am.",
+    pressure: "Postmortem is starting. You approved several of the expansions. Customer relationship at risk.",
+    deadline: "Postmortem now.",
+    calls: "Revoke access · tighten approval · establish policy · communicate",
+  },
 }
 
 // Top border color by primary role(s)

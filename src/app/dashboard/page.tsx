@@ -24,7 +24,7 @@ const CHALLENGE_SCENARIO_SLUGS: Record<string, string[]> = {
 }
 
 const CHALLENGE_MODULE_SLUGS: Record<string, string[]> = {
-  "understanding-ai":        ["what-ai-is", "ai-building-blocks", "what-llms-actually-do", "what-ai-is-bad-at"],
+  "understanding-ai":        ["what-is-ai", "ai-building-blocks", "what-llms-actually-do", "what-ai-is-bad-at"],
   "evaluating-tools":        ["build-vs-buy", "model-selection-basics"],
   "implementing-workflows":  ["ai-ux-human-in-the-loop", "building-reliable-ai-features"],
   "leading-ai-initiatives":  ["leading-ai-at-org-level"],
@@ -51,9 +51,9 @@ const GOAL_MODULE_SLUGS: Record<string, string[]> = {
   "implement-ai":            ["ai-ux-human-in-the-loop", "agentic-ai", "building-reliable-ai-features"],
   "lead-initiative":         ["leading-ai-at-org-level", "data-privacy-ai-governance", "ai-ethics-bias"],
   "build-roadmap":           ["ai-product-failure-modes", "build-vs-buy", "measuring-ai-roi"],
-  "understand-fundamentals": ["what-ai-is", "ai-building-blocks", "what-llms-actually-do"],
+  "understand-fundamentals": ["what-is-ai", "ai-building-blocks", "what-llms-actually-do"],
   "boost-productivity":      ["prompting-is-not-programming", "agentic-ai"],
-  "informed-contributor":    ["what-ai-is", "ai-building-blocks", "ai-ethics-bias", "what-ai-is-bad-at"],
+  "informed-contributor":    ["what-is-ai", "ai-building-blocks", "ai-ethics-bias", "what-ai-is-bad-at"],
 }
 
 const GOAL_SCENARIO_SLUGS: Record<string, string[]> = {

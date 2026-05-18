@@ -11,6 +11,7 @@ import { isMissionFree } from "@/config/access"
 import { C } from "@/lib/colors"
 import { MonoLabel, Panel, BulletList } from "@/components/detail-layout"
 import { LevelUpBanner } from "@/components/LevelUpBanner"
+import { getPoints } from "@/config/scoring"
 
 function missionDraftKey(slug: string) { return `ascent_mission_draft_${slug}` }
 function loadMissionDraft(slug: string): string {
@@ -232,7 +233,7 @@ export default function MissionPage() {
           <div>
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", color: C.good }}>
-                ✓ MISSION COMPLETE{session ? " — +40 PTS" : ""}
+                ✓ MISSION COMPLETE{session ? ` — +${getPoints("mission", mission.difficulty)} PTS` : ""}
               </div>
               {levelUp && <LevelUpBanner level={levelUp.level} name={levelUp.name} />}
               <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10.5, letterSpacing: "0.14em", color: C.sub, marginTop: 4 }}>
